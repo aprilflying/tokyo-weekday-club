@@ -99,7 +99,6 @@ async function handle(request) {
     customer: customer.id,
     client_reference_id: ref,
     locale: lang === 'zh' ? 'zh-HK' : 'en',
-    phone_number_collection: { enabled: true },
     custom_text: { submit: { message } },
     setup_intent_data: {
       metadata: { ref, weeks: weekCodes.join('-'), kids: String(kids), total_jpy: String(totalJpy) },
