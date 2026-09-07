@@ -55,9 +55,15 @@ export async function POST(request) {
       await onInvoicePaid(event.data.object);
     }
   } catch (err) {
-    // Return 500 so Stripe retries. Check Vercel logs for the message.
+    // Return 500 so Stripe retries, and say why so it shows in Stripe's delivery log.
     console.error('webhook handler error', err);
-    return new Response('handler error', { status: 500 });
+    return Response.json({
+      ok: false,
+      error: String(err && err.message || err),
+      type: err && err.type,
+      param: err && err.param,
+      step: err && err.__step,
+    }, { status: 500 });
   }
 
   return Response.json({ received: true });
@@ -70,16 +76,16 @@ async function onCardSaved(session) {
   const kids       = Math.max(1, parseInt(session.metadata?.kids, 10) || 1);
 
   // 1. make the saved card the default for automatic invoice charging
-  const si = await stripe.setupIntents.retrieve(session.setup_intent);
+  const si = await step('retrieve setup intent', () => stripe.setupIntents.retrieve(session.setup_intent));
   const pm = typeof si.payment_method === 'string' ? si.payment_method : si.payment_method?.id;
   if (pm) {
-    await stripe.customers.update(customerId, {
+    await step('set default payment method', () => stripe.customers.update(customerId, {
       invoice_settings: { default_payment_method: pm },
-    });
+    }));
   }
 
   // 2. one draft invoice per week
-  const customer = await stripe.customers.retrieve(customerId);
+  const customer = await step('retrieve customer', () => stripe.customers.retrieve(customerId));
   for (const code of weeks) {
     const m = /^W(\d+)(AM|PM)$/.exec(code);
     if (!m) continue;
@@ -88,7 +94,7 @@ async function onCardSaved(session) {
     const label = `${DAYS[idx] || code} · ${sess}`;
     const amount = PRICE_PER_WEEK_JPY * kids;
 
-    const invoice = await stripe.invoices.create({
+    const invoice = await step('create invoice ' + code, () => stripe.invoices.create({
       customer: customerId,
       currency: 'jpy',
       collection_method: 'charge_automatically',
@@ -97,16 +103,16 @@ async function onCardSaved(session) {
       description: `Tokyo Weekday Club · ${label} · ${kids} child${kids > 1 ? 'ren' : ''} · ref ${ref}`,
       metadata: { ref, week: code, kids: String(kids), parent: customer.name || '' },
       footer: 'Charged to your saved card once the class was confirmed. 50% refund with 14+ days notice.',
-    }, { idempotencyKey: `inv-${ref}-${code}` });
+    }, { idempotencyKey: `inv-${ref}-${code}` }));
 
-    await stripe.invoiceItems.create({
+    await step('create invoice item ' + code, () => stripe.invoiceItems.create({
       customer: customerId,
       invoice: invoice.id,
       currency: 'jpy',
       amount,
       description: `Japanese for kids · ${label} · ${kids} × ¥${PRICE_PER_WEEK_JPY.toLocaleString('en-US')}`,
       metadata: { ref, week: code },
-    }, { idempotencyKey: `item-${ref}-${code}` });
+    }, { idempotencyKey: `item-${ref}-${code}` }));
   }
 
   // 3. sheet
@@ -118,6 +124,11 @@ async function onInvoicePaid(invoice) {
   const week = invoice.metadata?.week;
   if (!ref) return;
   await sheet({ action: 'status', ref, status: 'paid', note: `paid ${week} ¥${(invoice.amount_paid || 0).toLocaleString('en-US')}` });
+}
+
+async function step(name, fn) {
+  try { return await fn(); }
+  catch (err) { if (err && typeof err === 'object') err.__step = name; throw err; }
 }
 
 async function sheet(payload) {
