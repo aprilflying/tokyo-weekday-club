@@ -1,0 +1,9 @@
+{
+  "name": "tokyo-weekday-club",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "stripe": "^22.6.1"
+  }
+}
