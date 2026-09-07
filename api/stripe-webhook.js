@@ -99,7 +99,7 @@ async function onCardSaved(session) {
       currency: 'jpy',
       collection_method: 'charge_automatically',
       auto_advance: false,                       // stays a draft until you finalise it
-      pending_invoice_item_behavior: 'exclude',
+      pending_invoice_items_behavior: 'exclude',
       description: `Tokyo Weekday Club · ${label} · ${kids} child${kids > 1 ? 'ren' : ''} · ref ${ref}`,
       metadata: { ref, week: code, kids: String(kids), parent: customer.name || '' },
       footer: 'Charged to your saved card once the class was confirmed. 50% refund with 14+ days notice.',
