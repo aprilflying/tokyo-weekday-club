@@ -8,6 +8,8 @@
 <meta name="description" content="Kids learn Japanese. Parents get Tokyo back. Small-group classes for ages 6–12 in Meguro, Tokyo, timed for school holidays. 4–6 per class, book by the week.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Tokyo Weekday Club">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="zh_HK">
 <meta property="og:title" content="Tokyo Weekday Club. Kids learn Japanese. Parents get Tokyo back.">
 <meta property="og:description" content="Kids learn Japanese. Parents get Tokyo back. Small-group classes for ages 6–12 in Meguro, Tokyo, timed for school holidays. 4–6 per class, book by the week.">
 <meta property="og:url" content="https://www.tokyoweekdayclub.com/">
@@ -19,6 +21,9 @@
 <meta name="twitter:title" content="Tokyo Weekday Club. Kids learn Japanese. Parents get Tokyo back.">
 <meta name="twitter:description" content="Kids learn Japanese. Parents get Tokyo back. Small-group classes for ages 6–12 in Meguro, Tokyo, timed for school holidays. 4–6 per class, book by the week.">
 <meta name="twitter:image" content="https://www.tokyoweekdayclub.com/og-share-v4.jpg">
+<link rel="alternate" hreflang="en" href="https://www.tokyoweekdayclub.com/">
+<link rel="alternate" hreflang="zh-Hant" href="https://www.tokyoweekdayclub.com/hk">
+<link rel="alternate" hreflang="x-default" href="https://www.tokyoweekdayclub.com/">
 <link rel="icon" href="/favicon.ico">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <script async src="https://www.googletagmanager.com/gtag/js?id=AW-XXXXXXXXX"></script>
@@ -676,7 +681,7 @@ class Component extends DCLogic {
       zhBg: zh ? '#C0392B' : '#FAF7F2', zhFg: zh ? '#FAF7F2' : '#0F0F12',
       trackStart: () => this.trackStart(),
       setEn: () => this.setState({ lang: 'en' }),
-      setZh: () => this.setState({ lang: 'zh' }),
+      setZh: () => { window.location.href = '/hk'; },
       sent: this.state.sent, notSent: !this.state.sent,
       submit: (e) => {
         e.preventDefault();
