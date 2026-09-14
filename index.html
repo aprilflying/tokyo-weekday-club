@@ -11,16 +11,23 @@
 <meta property="og:title" content="Tokyo Weekday Club. Kids learn Japanese. Parents get Tokyo back.">
 <meta property="og:description" content="Kids learn Japanese. Parents get Tokyo back. Small-group classes for ages 6–12 in Meguro, Tokyo, timed for school holidays. 4–6 per class, book by the week.">
 <meta property="og:url" content="https://www.tokyoweekdayclub.com/">
-<meta property="og:image" content="https://www.tokyoweekdayclub.com/og-share-v3.png">
+<meta property="og:image" content="https://www.tokyoweekdayclub.com/og-share-v4.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Tokyo Weekday Club. Kids learn Japanese. Parents get Tokyo back.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Tokyo Weekday Club. Kids learn Japanese. Parents get Tokyo back.">
 <meta name="twitter:description" content="Kids learn Japanese. Parents get Tokyo back. Small-group classes for ages 6–12 in Meguro, Tokyo, timed for school holidays. 4–6 per class, book by the week.">
-<meta name="twitter:image" content="https://www.tokyoweekdayclub.com/og-share-v3.png">
+<meta name="twitter:image" content="https://www.tokyoweekdayclub.com/og-share-v4.jpg">
 <link rel="icon" href="/favicon.ico">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-XXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'AW-XXXXXXXXX');
+</script>
 <script>
   !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug getPageViewId captureTraceFeedback captureTraceMetric".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
   posthog.init('phc_zQEiad8smixwPmBLpT6aDNfFX3uaKpALEUbPCb4GsLpy', {api_host: 'https://us.i.posthog.com', defaults: '2025-05-24'})
@@ -57,6 +64,12 @@ summary::-webkit-details-marker{display:none}
 @media(min-width:860px){.twc-navlinks{display:flex !important}}
 .twc-sticky{display:none}
 @media(max-width:719px){.twc-sticky{display:flex !important}}
+.twc-sunbox{min-height:clamp(240px,52vw,440px)}
+.twc-sun-b{width:min(280px,42vw)}
+.twc-sun-s{width:min(92px,15vw)}
+.twc-sun-t{width:min(64px,11vw)}
+.twc-sun-m{width:min(160px,25vw)}
+@media(max-width:719px){.twc-sunbox{min-height:clamp(96px,26vw,187px)}.twc-sun-b{width:21vw}.twc-sun-s{width:7.5vw}.twc-sun-t{width:5.5vw}.twc-sun-m{width:12.5vw}}
 @media(prefers-reduced-motion:reduce){*{animation:none !important}}
 </style>
 </helmet>
@@ -131,17 +144,17 @@ summary::-webkit-details-marker{display:none}
     </div>
     
   </div>
-  <div ref="{{ sunBoxRef }}" style="position:relative;min-height:clamp(120px,26vw,440px);overflow:hidden;animation:twcHero .9s cubic-bezier(.16,1,.3,1) .15s both">
-    <div ref="{{ sunBigRef }}" style="position:absolute;top:0;left:0;width:min(280px,21vw);will-change:transform">
+  <div ref="{{ sunBoxRef }}" class="twc-sunbox" style="position:relative;overflow:hidden;animation:twcHero .9s cubic-bezier(.16,1,.3,1) .15s both">
+    <div ref="{{ sunBigRef }}" class="twc-sun-b" style="position:absolute;top:0;left:0;will-change:transform">
       <svg viewBox="0 0 100 100" style="width:100%;height:auto;display:block"><path d="M54 8 C 74 6, 91 25, 92 46 C 93 69, 79 90, 54 92 C 31 94, 9 79, 8 51 C 7 27, 33 10, 54 8 Z" fill="#F8DDD8" stroke="#26221F" stroke-width="0.5"></path></svg>
     </div>
-    <div ref="{{ sunSmallRef }}" style="position:absolute;top:0;left:0;width:min(92px,7.5vw);will-change:transform">
+    <div ref="{{ sunSmallRef }}" class="twc-sun-s" style="position:absolute;top:0;left:0;will-change:transform">
       <svg viewBox="0 0 100 100" style="width:100%;height:auto;display:block"><path d="M56 9 C 76 9, 90 27, 91 48 C 92 70, 77 91, 52 91 C 28 91, 9 76, 9 50 C 9 27, 35 9, 56 9 Z" fill="#C0392B" stroke="#26221F" stroke-width="0.5"></path></svg>
     </div>
-    <div ref="{{ sunTinyRef }}" style="position:absolute;top:0;left:0;width:min(64px,5.5vw);will-change:transform">
+    <div ref="{{ sunTinyRef }}" class="twc-sun-t" style="position:absolute;top:0;left:0;will-change:transform">
       <svg viewBox="0 0 100 100" style="width:100%;height:auto;display:block"><path d="M54 8 C 74 6, 91 25, 92 46 C 93 69, 79 90, 54 92 C 31 94, 9 79, 8 51 C 7 27, 33 10, 54 8 Z" fill="#EFB9AE" stroke="#26221F" stroke-width="0.5"></path></svg>
     </div>
-    <div ref="{{ sunMidRef }}" style="position:absolute;top:0;left:0;width:min(160px,12.5vw);will-change:transform">
+    <div ref="{{ sunMidRef }}" class="twc-sun-m" style="position:absolute;top:0;left:0;will-change:transform">
       <svg viewBox="0 0 100 100" style="width:100%;height:auto;display:block"><path d="M52 10 C 73 8, 89 26, 90 47 C 91 68, 78 90, 53 90 C 30 92, 10 77, 10 51 C 10 28, 33 12, 52 10 Z" fill="#E2694F" stroke="#26221F" stroke-width="0.5"></path></svg>
     </div>
   </div>
@@ -450,7 +463,7 @@ summary::-webkit-details-marker{display:none}
         <form onSubmit="{{ submit }}" style="position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
               <input name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;height:0;width:0">
           <div style="grid-column:1/-1;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.1em;color:rgba(250,247,242,.85)"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>2 · Your details</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>2 · 你的資料</span></sc-if></div>
-          <input required="{{ true }}" name="firstname" placeholder="{{ phFirstName }}" style="background:#FAF7F2;border:1px solid #0F0F12;border-radius:16px;padding:15px 18px;font-family:inherit;font-size:15px;color:#0F0F12;min-width:0">
+          <input required="{{ true }}" name="firstname" onFocus="{{ trackStart }}" placeholder="{{ phFirstName }}" style="background:#FAF7F2;border:1px solid #0F0F12;border-radius:16px;padding:15px 18px;font-family:inherit;font-size:15px;color:#0F0F12;min-width:0">
           <input required="{{ true }}" name="lastname" placeholder="{{ phLastName }}" style="background:#FAF7F2;border:1px solid #0F0F12;border-radius:16px;padding:15px 18px;font-family:inherit;font-size:15px;color:#0F0F12;min-width:0">
           <input required="{{ true }}" type="email" name="email" placeholder="{{ phEmail }}" style="background:#FAF7F2;border:1px solid #0F0F12;border-radius:16px;padding:15px 18px;font-family:inherit;font-size:15px;color:#0F0F12;min-width:0">
           <div style="display:grid;grid-template-columns:{{ dialCols }};gap:10px;min-width:0;grid-column:{{ dialSpan }}">
@@ -607,6 +620,7 @@ class Component extends DCLogic {
     sheetToken: 'CHANGE-ME-to-a-long-random-string'   // same string as the Apps Script and Vercel SITE_TOKEN
   };
   state = { lang: null, sent: false, sels: {}, pg: 0 };
+  trackStart() { if (this._bkStarted) return; this._bkStarted = true; try { if (window.posthog && posthog.capture) posthog.capture('booking_started'); } catch (err) {} }
   renderVals() {
     const lang = this.state.lang ?? this.props.lang ?? 'en';
     const en = lang === 'en', zh = !en;
@@ -630,7 +644,7 @@ class Component extends DCLogic {
         cursor: full ? 'not-allowed' : 'pointer',
         borderStyle: full ? 'dashed' : 'solid',
         bg: full ? '#F1EAE0' : selected ? '#0F0F12' : '#FAF7F2', fg: full ? 'rgba(15,15,18,.38)' : selected ? '#FAF7F2' : '#0F0F12',
-        pick: () => { if (full) return; this.setState(st => { const n = { ...st.sels }; if (n[i] !== undefined) delete n[i]; else n[i] = amFull ? 'pm' : 'am'; return { sels: n }; }); },
+        pick: () => { if (full) return; this.trackStart(); this.setState(st => { const n = { ...st.sels }; if (n[i] !== undefined) delete n[i]; else n[i] = amFull ? 'pm' : 'am'; return { sels: n }; }); },
         pickAm: (e) => { e.stopPropagation(); if (amFull) return; this.setState(st => ({ sels: { ...st.sels, [i]: 'am' } })); },
         pickPm: (e) => { e.stopPropagation(); if (pmFull) return; this.setState(st => ({ sels: { ...st.sels, [i]: 'pm' } })); },
         amOp: amFull ? 0.4 : 1, amCursor: amFull ? 'not-allowed' : 'pointer', amDeco: amFull ? 'line-through' : 'none',
@@ -660,6 +674,7 @@ class Component extends DCLogic {
       en, zh,
       enBg: en ? '#C0392B' : '#FAF7F2', enFg: en ? '#FAF7F2' : '#0F0F12',
       zhBg: zh ? '#C0392B' : '#FAF7F2', zhFg: zh ? '#FAF7F2' : '#0F0F12',
+      trackStart: () => this.trackStart(),
       setEn: () => this.setState({ lang: 'en' }),
       setZh: () => this.setState({ lang: 'zh' }),
       sent: this.state.sent, notSent: !this.state.sent,
@@ -684,6 +699,10 @@ class Component extends DCLogic {
           website: fd.get('website') || ''
         };
         this.setState({ sent: true, booking, kids: kidsCount, holdError: '' });
+        try {
+          if (window.gtag) gtag('event', 'conversion', { send_to: 'AW-XXXXXXXXX/CONVERSION_LABEL', value: 48000, currency: 'JPY', transaction_id: ref });
+          if (window.posthog && posthog.capture) posthog.capture('booking_submitted', { weeks: weekCodes });
+        } catch (err) {}
         if (S.sheetEndpoint) {
           try {
             fetch(S.sheetEndpoint, { method: 'POST', mode: 'no-cors', keepalive: true, body: JSON.stringify({
