@@ -1,26 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tokyo Weekday Club | Japanese Classes for Kids in Tokyo</title>
-<link rel="canonical" href="https://www.tokyoweekdayclub.com/">
-<meta name="description" content="Kids learn Japanese. Parents get Tokyo back. Small-group classes for ages 6–12 in Meguro, Tokyo, timed for school holidays. 3–6 per class, book by the week.">
+<title>Tokyo Weekday Club｜東京兒童日語課程．6至12歲</title>
+<link rel="canonical" href="https://www.tokyoweekdayclub.com/hk">
+<meta name="description" content="以星期為單位的日語課程，專為來東京旅行的家庭而設。小朋友學日文，爸媽也有時間好好探索東京。目黑區小班教學，6至12歲。">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Tokyo Weekday Club">
-<meta property="og:locale" content="en_US">
-<meta property="og:locale:alternate" content="zh_HK">
-<meta property="og:title" content="Tokyo Weekday Club. Kids learn Japanese. Parents get Tokyo back.">
-<meta property="og:description" content="Kids learn Japanese. Parents get Tokyo back. Small-group classes for ages 6–12 in Meguro, Tokyo, timed for school holidays. 3–6 per class, book by the week.">
-<meta property="og:url" content="https://www.tokyoweekdayclub.com/">
-<meta property="og:image" content="https://www.tokyoweekdayclub.com/og-share-v4.jpg">
+<meta property="og:locale" content="zh_HK">
+<meta property="og:locale:alternate" content="zh_TW">
+<meta property="og:title" content="Tokyo Weekday Club．小朋友學日文。爸媽享受自由時間。">
+<meta property="og:description" content="以星期為單位的日語課程，專為來東京旅行的家庭而設。小朋友學日文，爸媽也有時間好好探索東京。目黑區小班教學，6至12歲。">
+<meta property="og:url" content="https://www.tokyoweekdayclub.com/hk">
+<meta property="og:image" content="https://www.tokyoweekdayclub.com/og-share-hk-v1.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Tokyo Weekday Club. Kids learn Japanese. Parents get Tokyo back.">
+<meta property="og:image:alt" content="Tokyo Weekday Club．小朋友學日文。爸媽享受自由時間。">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Tokyo Weekday Club. Kids learn Japanese. Parents get Tokyo back.">
-<meta name="twitter:description" content="Kids learn Japanese. Parents get Tokyo back. Small-group classes for ages 6–12 in Meguro, Tokyo, timed for school holidays. 3–6 per class, book by the week.">
-<meta name="twitter:image" content="https://www.tokyoweekdayclub.com/og-share-v4.jpg">
+<meta name="twitter:title" content="Tokyo Weekday Club．小朋友學日文。爸媽享受自由時間。">
+<meta name="twitter:description" content="以星期為單位的日語課程，專為來東京旅行的家庭而設。小朋友學日文，爸媽也有時間好好探索東京。目黑區小班教學，6至12歲。">
+<meta name="twitter:image" content="https://www.tokyoweekdayclub.com/og-share-hk-v1.jpg">
 <link rel="alternate" hreflang="en" href="https://www.tokyoweekdayclub.com/">
 <link rel="alternate" hreflang="zh-Hant" href="https://www.tokyoweekdayclub.com/hk">
 <link rel="alternate" hreflang="x-default" href="https://www.tokyoweekdayclub.com/">
@@ -627,7 +627,7 @@ class Component extends DCLogic {
   state = { lang: null, sent: false, sels: {}, pg: 0 };
   trackStart() { if (this._bkStarted) return; this._bkStarted = true; try { if (window.posthog && posthog.capture) posthog.capture('booking_started', { lang: this.state.lang ?? (document.documentElement.lang === 'zh-Hant' ? 'zh' : 'en') }); } catch (err) {} }
   renderVals() {
-    const lang = this.state.lang ?? this.props.lang ?? 'en';
+    const lang = this.state.lang ?? this.props.lang ?? 'zh';
     const en = lang === 'en', zh = !en;
     const days = ['Oct 5–8','Oct 12–15','Oct 19–22','Oct 26–29','Nov 2–5','Nov 9–12','Nov 16–19','Nov 23–26','Nov 30–Dec 3','Dec 7–10','Dec 14–17','Dec 21–24'];
     const sels = this.state.sels;
@@ -680,8 +680,8 @@ class Component extends DCLogic {
       enBg: en ? '#C0392B' : '#FAF7F2', enFg: en ? '#FAF7F2' : '#0F0F12',
       zhBg: zh ? '#C0392B' : '#FAF7F2', zhFg: zh ? '#FAF7F2' : '#0F0F12',
       trackStart: () => this.trackStart(),
-      setEn: () => this.setState({ lang: 'en' }),
-      setZh: () => { window.location.href = '/hk'; },
+      setEn: () => { window.location.href = '/'; },
+      setZh: () => this.setState({ lang: 'zh' }),
       sent: this.state.sent, notSent: !this.state.sent,
       submit: (e) => {
         e.preventDefault();
