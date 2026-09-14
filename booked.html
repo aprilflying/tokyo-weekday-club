@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+<meta name="robots" content="noindex,nofollow">
+<script>
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug getPageViewId captureTraceFeedback captureTraceMetric".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  posthog.init('phc_zQEiad8smixwPmBLpT6aDNfFX3uaKpALEUbPCb4GsLpy', {api_host: 'https://us.i.posthog.com', defaults: '2025-05-24'})
+</script>
+<!-- Google tag (gtag.js): paste the snippet from Google Ads conversion setup here. Required before URL-based conversion tracking can fire. -->
+<template id="__bundler_thumbnail" data-bg-color="#C0392B"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#C0392B"/><path d="M64 34 C 74 33, 82 42, 82.5 52 C 83 63, 76 73, 64 74 C 53 75, 42 68, 41.5 55 C 41 44, 54 35, 64 34 Z" fill="#F8DDD8" stroke="#26221F" stroke-width="2"/><text x="18" y="72" font-family="Georgia,serif" font-weight="900" font-size="40" fill="#FAF7F2">t</text></svg></template>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Booking held | Tokyo Weekday Club</title>
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
+<link rel="apple-touch-icon" href="./favicon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..900;1,9..144,400..900&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Huninn&amp;family=Zen+Maru+Gothic:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#C0392B;color:#0F0F12;font-family:'Inter','Huninn','Zen Maru Gothic','Hiragino Sans','PingFang TC',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#C0392B}a:hover{color:#0F0F12}
+@media(prefers-reduced-motion:reduce){*{animation:none !important}}
+</style>
+</helmet>
+
+<nav style="position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 5vw;background:#FAF7F2;border-bottom:1px solid #0F0F12">
+  <a href="{{ backHref }}" style="display:flex;align-items:baseline;gap:2px;text-decoration:none;color:#0F0F12;font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-weight:900;font-size:23px;letter-spacing:-0.02em;white-space:nowrap">tokyo&nbsp;<span style="font-style:italic;font-weight:600;color:#C0392B">weekday</span>&nbsp;club<svg viewBox="0 0 100 100" style="display:inline-block;width:11px;height:11px;margin-left:8px;position:relative;top:-9px"><path d="M54 8 C 74 6, 91 25, 92 46 C 93 69, 79 90, 54 92 C 31 94, 9 79, 8 51 C 7 27, 33 10, 54 8 Z" fill="#F8DDD8" stroke="#26221F" stroke-width="2"></path></svg></a>
+  <div style="display:flex;border:1px solid #0F0F12;border-radius:999px;overflow:hidden;font-family:'JetBrains Mono',monospace;font-size:11.5px">
+    <button onClick="{{ setEn }}" style="border:none;cursor:pointer;padding:7px 12px;white-space:nowrap;background:{{ enBg }};color:{{ enFg }};font-family:inherit;font-size:inherit">EN</button>
+    <button onClick="{{ setZh }}" style="border:none;cursor:pointer;padding:7px 12px;white-space:nowrap;background:{{ zhBg }};color:{{ zhFg }};font-family:inherit;font-size:inherit;border-left:1px solid #0F0F12">繁體中文</button>
+  </div>
+</nav>
+
+<main style="background:#C0392B;min-height:calc(100vh - 60px)">
+  <div style="max-width:1000px;margin:0 auto;padding:64px 5vw 72px">
+    <svg viewBox="0 0 100 100" style="width:52px;height:52px;margin-bottom:16px"><path d="M54 8 C 74 6, 91 25, 92 46 C 93 69, 79 90, 54 92 C 31 94, 9 79, 8 51 C 7 27, 33 10, 54 8 Z" fill="#F8DDD8" stroke="#26221F" stroke-width="0.5"></path></svg>
+    <h1 style="font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-weight:900;font-size:clamp(30px,4.4vw,46px);letter-spacing:-0.01em;line-height:1.1;color:#FAF7F2;margin:0 0 12px"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>Card saved. Your place is held.</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>信用卡資料已儲存，我們已為你預留名額。</span></sc-if></h1>
+    <p style="margin:0 0 28px;max-width:620px;font-size:16px;line-height:1.7;color:rgba(250,247,242,.9)"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>Nothing has been charged yet. We'll only charge your card once your class is confirmed with a minimum of 3 children. We'll email you either way.</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>暫時不會收取任何費用。當班別達到最少 3 位小朋友並確認開班後，我們才會從你的信用卡收費。無論是否成功開班，我們都會以電郵通知你。</span></sc-if></p>
+    <p style="margin:-16px 0 28px;max-width:620px;font-size:14.5px;line-height:1.7;color:rgba(250,247,242,.8)"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>We've also sent you a confirmation email with your booking reference, address and a link to cancel if your plans change.</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>我們亦已將預約確認電郵寄給你，內有預約編號、上課地址及取消預約的連結。</span></sc-if></p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:16px">
+      <div style="background:#FAF7F2;border:1px solid #0F0F12;border-radius:22px;padding:24px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:0.1em;color:#C0392B;margin-bottom:10px"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>what to bring</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>上課要帶甚麼？</span></sc-if></div>
+        <sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><ul style="margin:0;padding-left:18px;font-size:14.5px;line-height:1.8;color:rgba(15,15,18,.78)"><li>Water bottle</li><li>Light snack</li></ul></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><ul style="margin:0;padding-left:18px;font-size:14.5px;line-height:1.8;color:rgba(15,15,18,.78)"><li>水樽</li><li>一份簡單小食</li></ul></sc-if>
+        <div style="margin-top:10px;font-size:14.5px;line-height:1.8;color:rgba(15,15,18,.78)"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>Textbook and all class materials are included.</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>課本及所有上課教材都由我們準備，費用已包括在學費內。</span></sc-if></div>
+      </div>
+      <div style="background:#FAF7F2;border:1px solid #0F0F12;border-radius:22px;padding:24px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:0.1em;color:#C0392B;margin-bottom:10px"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>getting there</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>如何前往？</span></sc-if></div>
+        <sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><ol style="margin:0;padding-left:18px;font-size:14.5px;line-height:1.8;color:rgba(15,15,18,.78)"><li>Take the <strong>JR Yamanote Line</strong> to <strong>Meguro</strong></li><li>Change to the <strong>Tokyu Meguro Line</strong></li><li>Ride 2 stops to <strong>Musashi-Koyama</strong></li><li>From the station, it's a 7-minute walk</li></ol></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><ol style="margin:0;padding-left:18px;font-size:14.5px;line-height:1.8;color:rgba(15,15,18,.78)"><li>乘搭 <strong>JR 山手線</strong>到 <strong>目黑站</strong></li><li>在站內轉乘 <strong>東急目黑線</strong></li><li>坐 2 個站到 <strong>武藏小山站</strong></li><li>出站後步行約 7 分鐘</li></ol></sc-if>
+        <div style="margin-top:10px;font-size:14.5px;line-height:1.8;color:rgba(15,15,18,.78)"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>We're directly opposite <strong>Meguro Central Gymnasium (目黒区立中央体育館)</strong>.</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>教室就在 <strong>目黑區立中央體育館（目黒区立中央体育館）</strong> 對面。</span></sc-if></div>
+      </div>
+      <div style="background:#FAF7F2;border:1px solid #0F0F12;border-radius:22px;padding:24px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:0.1em;color:#C0392B;margin-bottom:10px"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>address</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>地址</span></sc-if></div>
+        <div style="font-size:14.5px;line-height:1.8;color:rgba(15,15,18,.78)"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span><strong>Aliquot Turm 5/F</strong><br>5-10-19 Megurohoncho, Meguro-ku<br>Tokyo 152-0002<br>Opposite <strong>Meguro Central Gymnasium (目黒区立中央体育館)</strong>.</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span><strong>〒152-0002</strong><br>東京都目黒区目黒本町5丁目10-19<br>Aliquot Turm 5F<br>教室位於 <strong>目黒区立中央体育館</strong> 對面。</span></sc-if></div>
+        <div style="margin-top:12px;font-size:13px;font-weight:600;color:rgba(15,15,18,.7)"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>Taking a taxi? Show your driver this:</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>乘的士？可以直接給司機看：</span></sc-if></div>
+        <div style="margin-top:8px;background:#F1EAE0;border:1px solid #0F0F12;border-radius:12px;padding:12px 14px;font-family:'Huninn','Zen Maru Gothic',sans-serif;font-weight:700;font-size:15.5px;line-height:1.6">東京都目黒区目黒本町5-10-19<br>（目黒区立中央体育館の向かい）<br>Aliquot Turm 5/F までお願いします。<br><span style="font-weight:500;font-size:13px;color:rgba(15,15,18,.6)">マッカム ランゲージ ルーム<br>（武蔵小山駅 徒歩7分）</span></div>
+      </div>
+      <div style="background:#FAF7F2;border:1px solid #0F0F12;border-radius:22px;padding:24px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:0.1em;color:#C0392B;margin-bottom:10px"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>changes &amp; contact</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>更改或取消預約</span></sc-if></div>
+        <div style="font-size:14.5px;line-height:1.8;color:rgba(15,15,18,.78);margin-bottom:8px"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>We know travelling with kids doesn't always go exactly to plan.</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>我們明白帶小朋友旅行，行程有時難免會有變。</span></sc-if></div>
+        <sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><ul style="margin:0;padding-left:18px;font-size:14.5px;line-height:1.8;color:rgba(15,15,18,.78)"><li><strong>Before your week is confirmed:</strong> Cancel anytime for free using the link in your confirmation email.</li><li><strong>14+ days before class:</strong> 50% refund.</li><li><strong>Less than 14 days before class:</strong> Non-refundable.</li><li><strong>No-shows:</strong> Non-refundable.</li><li><strong>Plans changed?</strong> Flight moved, child feeling unwell, or something else came up? Just contact us. We'll always do our best to help you move to another available week.</li></ul></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><ul style="margin:0;padding-left:18px;font-size:14.5px;line-height:1.8;color:rgba(15,15,18,.78)"><li><strong>開班確認前：</strong>可隨時免費取消，只需使用確認電郵內的取消連結。</li><li><strong>上課前 14 天或以上：</strong>可獲 50% 退款。</li><li><strong>上課前少於 14 天：</strong>恕不退款。</li><li><strong>缺席：</strong>恕不退款。</li><li><strong>行程有變？</strong>航班改期、小朋友不舒服，或臨時有其他事情，都可以聯絡我們。我們會盡量幫你安排到其他尚有名額的星期。</li></ul></sc-if>
+        <div style="margin-top:10px;font-size:14.5px;line-height:1.8;color:rgba(15,15,18,.78)"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>Questions or changes? Email us at </span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>有任何問題或需要更改預約，歡迎電郵 </span></sc-if><a href="mailto:hello@tokyoweekdayclub.com" style="color:#C0392B;font-weight:600">hello@tokyoweekdayclub.com</a><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span> 聯絡我們。</span></sc-if></div>
+      </div>
+    </div>
+    <a href="{{ backHref }}" style="display:inline-block;margin-top:24px;background:transparent;color:#FAF7F2;border:1px solid rgba(250,247,242,.6);border-radius:999px;padding:10px 22px;font-size:13.5px;text-decoration:none" style-hover="border-color:#FAF7F2;color:#FAF7F2"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>back to the site →</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>返回網站 →</span></sc-if></a>
+  </div>
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { lang: (typeof location !== 'undefined' && new URLSearchParams(location.search).get('lang') === 'zh') ? 'zh' : 'en' };
+  renderVals() {
+    const en = this.state.lang === 'en', zh = !en;
+    return {
+      en, zh,
+      setEn: () => this.setState({ lang: 'en' }),
+      setZh: () => this.setState({ lang: 'zh' }),
+      enBg: en ? '#0F0F12' : '#FAF7F2', enFg: en ? '#FAF7F2' : '#0F0F12',
+      zhBg: zh ? '#0F0F12' : '#FAF7F2', zhFg: zh ? '#FAF7F2' : '#0F0F12',
+      backHref: en ? '/' : '/hk'
+    };
+  }
+}
+</script>
+</body>
+</html>
