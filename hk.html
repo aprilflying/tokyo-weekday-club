@@ -550,7 +550,7 @@ summary::-webkit-details-marker{display:none}
 </sc-if>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{
-  &quot;lang&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;en&quot;, &quot;zh&quot;], &quot;default&quot;: &quot;en&quot;, &quot;tsType&quot;: &quot;'en' | 'zh'&quot;, &quot;section&quot;: &quot;Content&quot;},
+  &quot;lang&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;en&quot;, &quot;zh&quot;], &quot;default&quot;: &quot;zh&quot;, &quot;tsType&quot;: &quot;'en' | 'zh'&quot;, &quot;section&quot;: &quot;Content&quot;},
   &quot;stickyCta&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Layout&quot;}
 }">
 class Component extends DCLogic {
@@ -624,7 +624,7 @@ class Component extends DCLogic {
     sheetEndpoint: 'https://script.google.com/macros/s/AKfycbwThrbKlH6gaWrqpzVSSM0D_5uKiAs8JA5Hr0TN-fWcErEbydmm3hkUsSpnLCnZBGMT/exec',
     sheetToken: 'CHANGE-ME-to-a-long-random-string'   // same string as the Apps Script and Vercel SITE_TOKEN
   };
-  state = { lang: null, sent: false, sels: {}, pg: 0 };
+  state = { lang: 'zh', sent: false, sels: {}, pg: 0 };
   trackStart() { if (this._bkStarted) return; this._bkStarted = true; try { if (window.posthog && posthog.capture) posthog.capture('booking_started', { lang: this.state.lang ?? (document.documentElement.lang === 'zh-Hant' ? 'zh' : 'en') }); } catch (err) {} }
   renderVals() {
     const lang = this.state.lang ?? this.props.lang ?? 'zh';
