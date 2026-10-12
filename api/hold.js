@@ -72,15 +72,17 @@ async function handle(request) {
   // At midnight Tuesday in Tokyo, bookings for the Monday–Thursday
   // class week close. This check is server-side, so an old open browser
   // tab or a hand-crafted checkout request cannot bypass the deadline.
-  const tokyoToday = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).format(new Date());
+  const tokyoDateParts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit',
+    }).formatToParts(new Date()).filter(p => p.type !== 'literal').map(p => [p.type, Number(p.value)])
+  );
   const bookingYear = 2026;
   const firstMondayUtc = Date.UTC(bookingYear, 9, 5);
   const todayUtc = Date.UTC(
-    Number(tokyoToday.slice(0, 4)),
-    Number(tokyoToday.slice(5, 7)) - 1,
-    Number(tokyoToday.slice(8, 10))
+    tokyoDateParts.year,
+    tokyoDateParts.month - 1,
+    tokyoDateParts.day
   );
   const expired = weeks.some(w => todayUtc >= firstMondayUtc + w.i * 7 * 86400000 + 86400000);
   if (expired) {
