@@ -1,24 +1,28 @@
 /**
- * Add the booking deadline to the original exported pages at build time.
- * No design/assets are re-exported. Unexpected source changes fail the build.
- * The API remains authoritative; all dates below are explicitly Tokyo time.
+ * Preserve the original site exports; add the Tokyo booking deadline/history.
+ * Currency strings contain $ followed by a quote. NEVER use source text as a
+ * String.replace replacement string: it would inject closing script tags.
+ * Validate the emitted HTML, not only the pre-serialization JavaScript.
  */
 import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import { pathToFileURL } from 'node:url';
 
-const MARKER = 'TWC_BOOKING_CUTOFF_V1';
+const MARKER = 'TWC_BOOKING_HISTORY_V2';
 const FIRST_CUTOFF = Date.parse('2026-10-06T00:00:00+09:00');
 const WEEK = 7 * 86400000;
-
+const SCRIPT = /<script\b[^>]*\bdata-dc-script\b[^>]*>([\s\S]*?)<\/script>/gi;
 const METHODS = `
-  // TWC_BOOKING_CUTOFF_V1: keep these dates aligned with api/hold.js.
+  // TWC_BOOKING_HISTORY_V2: original week IDs, 14-day closed-week history.
   static bookingCutoff(i) {
     return Date.parse('2026-10-06T00:00:00+09:00') + i * 7 * 86400000;
   }
   static bookingWeekOpen(i, now = Date.now()) {
     return Number.isInteger(i) && i >= 0 && i < 12 && now < Component.bookingCutoff(i);
+  }
+  static bookingWeekVisible(i, now = Date.now()) {
+    return Number.isInteger(i) && i >= 0 && i < 12 && now < Component.bookingCutoff(i) + 14 * 86400000;
   }
   openBookingSelections() {
     return Object.fromEntries(Object.entries(this.state.sels || {}).filter(([i]) => Component.bookingWeekOpen(Number(i))));
@@ -34,17 +38,16 @@ const METHODS = `
     this.stopBookingClock();
     this._bookingClockRefresh = () => {
       const now = Date.now();
-      const sels = this.openBookingSelections();
       const expiredSelection = Object.keys(this.state.sels || {}).some(i => !Component.bookingWeekOpen(Number(i), now));
       const pending = this.state.booking;
       const expiredPending = pending && Array.isArray(pending.weeksSel) && pending.weeksSel.some(w => !Component.bookingWeekOpen(w.i, now));
       const q = new URLSearchParams(window.location.search);
-      // Never modify an already-held booking or the cancellation flow.
       if (!q.has('held') && !q.has('cancel') && !this.state.cancelRef && (expiredSelection || expiredPending)) this.rejectClosedBooking();
       this.setState({ _bookingClockTime: now });
       clearTimeout(this._bookingClockTimer);
-      const next = Array.from({ length: 12 }, (_, i) => Component.bookingCutoff(i)).find(t => t > now);
-      this._bookingClockTimer = next === undefined ? null : setTimeout(this._bookingClockRefresh, next - now + 1);
+      const events = Array.from({ length: 12 }, (_, i) => Component.bookingCutoff(i)).flatMap(t => [t, t + 14 * 86400000]);
+      const next = events.filter(t => t > now).sort((a, b) => a - b)[0];
+      this._bookingClockTimer = next === undefined ? null : setTimeout(this._bookingClockRefresh, Math.min(next - now + 1, 86400000));
     };
     window.addEventListener('focus', this._bookingClockRefresh);
     window.addEventListener('pageshow', this._bookingClockRefresh);
@@ -63,21 +66,31 @@ const METHODS = `
 
 function once(text, before, after, label) {
   assert.equal(text.split(before).length - 1, 1, `Expected exactly one ${label}`);
-  return text.replace(before, after);
+  return text.replace(before, () => after);
+}
+function scriptSource(html) {
+  const matches = [...html.matchAll(SCRIPT)];
+  assert.equal(matches.length, 1, 'Expected exactly one booking component');
+  return matches[0];
 }
 
 export function patchHtml(html) {
-  assert(!html.includes(MARKER), 'Page has already been patched; use the original repository export');
-  const matches = [...html.matchAll(/<script\b[^>]*\bdata-dc-script\b[^>]*>([\s\S]*?)<\/script>/gi)];
-  assert.equal(matches.length, 1, 'Expected one original booking component');
-  const match = matches[0];
+  assert(!html.includes(MARKER), 'Use the unmodified repository export');
+  const match = scriptSource(html);
   const original = match[1];
   let source = original;
   source = once(source, 'class Component extends DCLogic {', 'class Component extends DCLogic {' + METHODS, 'Component declaration');
   source = once(source, '  componentDidMount() {', '  componentDidMount() {\n    this.startBookingClock();', 'mount hook');
   source = once(source, '  componentWillUnmount() {', '  componentWillUnmount() { this.stopBookingClock();', 'unmount hook');
   source = once(source, '    const sels = this.state.sels;', '    const sels = this.openBookingSelections();', 'booking selections');
-  source = once(source, '    });\n    const picked = Object.keys(sels)', '    }).filter((w, i) => Component.bookingWeekOpen(i));\n    const picked = Object.keys(sels)', 'week map boundary');
+  source = once(source, '      const full = amFull && pmFull;', '      const full = amFull && pmFull;\n      const closed = !Component.bookingWeekOpen(i);', 'capacity and deadline');
+  source = once(source, 'days: en ? d : zhD(d), selected, full,', 'days: en ? d : zhD(d), selected, full, closed, closedNotFull: closed && !full,', 'tile states');
+  source = once(source, '(!selected && !full) ?', '(!selected && !full && !closed) ?', 'tile hint');
+  source = once(source, "cursor: full ? 'not-allowed'", "cursor: (full || closed) ? 'not-allowed'", 'tile cursor');
+  source = once(source, "borderStyle: full ? 'dashed'", "borderStyle: (full || closed) ? 'dashed'", 'tile border');
+  source = once(source, "bg: full ? '#F1EAE0'", "bg: (full || closed) ? '#F1EAE0'", 'tile background');
+  source = once(source, "fg: full ? 'rgba(15,15,18,.38)'", "fg: (full || closed) ? 'rgba(15,15,18,.38)'", 'tile text');
+  source = once(source, '    });\n    const picked = Object.keys(sels)', '    }).filter((w, i) => Component.bookingWeekVisible(i));\n    const picked = Object.keys(sels)', 'week map boundary');
   source = once(source, 'pick: () => { if (full) return;', 'pick: () => { if (!Component.bookingWeekOpen(i) || full) return;', 'week picker');
   source = once(source, 'e.stopPropagation(); if (amFull) return;', 'e.stopPropagation(); if (!Component.bookingWeekOpen(i) || amFull) return;', 'AM picker');
   source = once(source, 'e.stopPropagation(); if (pmFull) return;', 'e.stopPropagation(); if (!Component.bookingWeekOpen(i) || pmFull) return;', 'PM picker');
@@ -87,25 +100,32 @@ export function patchHtml(html) {
   source = once(source, '        if (!b || this.state.holding) return;', `        if (!b || this.state.holding) return;
         if (!Array.isArray(b.weeksSel) || !b.weeksSel.length || b.weeksSel.some(w => !Component.bookingWeekOpen(w.i))) { this.rejectClosedBooking(); return; }`, 'checkout guard');
   source = once(source, "          if (j.code === 'full') {", "          if (j.code === 'week_closed') { this.rejectClosedBooking(); return; }\n          if (j.code === 'full') {", 'server deadline response');
-  source = once(source, '      weeks, selDays, selDaysZh,', '      noUpcomingWeeks: weeks.length === 0,\n      weeks, selDays, selDaysZh,', 'empty-term state');
+  source = once(source, '      weeks, selDays, selDaysZh,', '      noUpcomingWeeks: !weeks.some(w => !w.closed),\n      weeks, selDays, selDaysZh,', 'empty-term state');
   new vm.Script(source);
-  let output = html.slice(0, match.index) + match[0].replace(original, source) + html.slice(match.index + match[0].length);
+  // Literal slicing prevents $ currency strings from becoming replacement tokens.
+  const offset = match.index + match[0].indexOf('>') + 1;
+  let output = html.slice(0, offset) + source + html.slice(offset + original.length);
   output = once(output, '            <sc-for list="{{ weeks }}" as="w" hint-placeholder-count="6">', `            <sc-if value="{{ noUpcomingWeeks }}" hint-placeholder-val="{{ false }}"><p style="color:#FAF7F2;margin:0"><sc-if value="{{ en }}"><span>New dates will be announced soon. Please contact us about future weeks.</span></sc-if><sc-if value="{{ zh }}"><span>新一期日期將會公布，歡迎聯絡我們查詢。</span></sc-if></p></sc-if>
             <sc-for list="{{ weeks }}" as="w" hint-placeholder-count="6">`, 'empty-term message');
-  // Verify large inline images and all other scripts remain byte-for-byte intact.
+  output = once(output, '                <sc-if value="{{ w.full }}"', `                <sc-if value="{{ w.closedNotFull }}" hint-placeholder-val="{{ false }}"><div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;margin-top:4px;letter-spacing:0.06em"><sc-if value="{{ en }}"><span>Bookings closed</span></sc-if><sc-if value="{{ zh }}"><span>預約已截止</span></sc-if></div></sc-if>
+                <sc-if value="{{ w.full }}"`, 'closed label');
+  output = once(output, '>full · 已滿</div>', '>fully booked · 已滿</div>', 'full label');
+  // Critical regression: test the exact bytes browsers will read from the HTML.
+  const emitted = scriptSource(output)[1];
+  assert.equal(emitted, source, 'Emitted script was truncated or altered');
+  new vm.Script(emitted);
+  assert.equal((output.match(/<\/script>/gi) || []).length, (html.match(/<\/script>/gi) || []).length, 'Extra closing script tags');
   const images = s => [...s.matchAll(/data:image\/[^\s"']+/g)].map(m => m[0]);
   assert.deepEqual(images(output), images(html), 'Inline image assets changed');
-  return { html: output, source, original };
+  return { html: output, source: emitted, original };
 }
 
-function harness(source, language = 'en') {
+function harness(source, language) {
   let now = FIRST_CUTOFF - 1;
   let nextId = 0;
-  const timers = new Map();
-  const listeners = new Map();
-  const requests = [];
-  const Date0 = Date;
-  class TestDate extends Date0 {
+  const timers = new Map(), listeners = new Map(), requests = [];
+  const BaseDate = Date;
+  class TestDate extends BaseDate {
     constructor(...args) { super(...(args.length ? args : [now])); }
     static now() { return now; }
   }
@@ -135,82 +155,86 @@ function harness(source, language = 'en') {
 
 export async function verifyComponent(source, file) {
   let checks = 0;
+  const check = (actual, expected) => { assert.deepEqual(actual, expected); checks++; };
   for (const lang of ['en', 'zh']) {
-    const h = harness(source, lang);
-    const c = new h.C();
-    assert.equal(c.renderVals().weeks.length, 12); checks++;
-    const originalDays = Array.from(c.renderVals().weeks, w => w.days);
-    for (let i = 0; i < 12; i++) {
-      h.clock(FIRST_CUTOFF + i * WEEK - 1);
-      assert.equal(c.renderVals().weeks.length, 12 - i); checks++;
-      h.clock(FIRST_CUTOFF + i * WEEK);
-      assert.deepEqual(Array.from(c.renderVals().weeks, w => w.days), originalDays.slice(i + 1)); checks++;
+    const h = harness(source, lang), c = new h.C();
+    const labels = Array.from(c.renderVals().weeks, w => w.days);
+    check(labels.length, 12);
+    for (let i = 0; i < 14; i++) {
+      for (const delta of [-1, 0, 1]) {
+        const now = FIRST_CUTOFF + i * WEEK + delta;
+        h.clock(now);
+        const expected = labels.filter((_, j) => now < FIRST_CUTOFF + (j + 2) * WEEK);
+        const v = c.renderVals();
+        check(Array.from(v.weeks, w => w.days), expected);
+        check(v.weeks.filter(w => w.closed).length <= 2, true);
+        check(v.noUpcomingWeeks, now >= FIRST_CUTOFF + 11 * WEEK);
+      }
     }
     h.clock(FIRST_CUTOFF);
-    c.state.sels = {};
+    check(c.renderVals().weeks[0].closedNotFull, true);
+    check(c.renderVals().weeks[0].full, false);
     c.renderVals().weeks[0].pick();
-    assert.deepEqual(Object.keys(c.state.sels), ['1']); checks++;
-    c.renderVals().weeks[0].pickPm({ stopPropagation() {} });
-    assert.equal(c.state.sels[1], 'pm'); checks++;
-    // The first visible tile is still W2, including its original capacity key.
+    check(Object.keys(c.state.sels), []);
+    c.renderVals().weeks[1].pick();
+    c.renderVals().weeks[1].pickPm({ stopPropagation() {} });
+    check(c.state.sels[1], 'pm');
+    c.state.counts = { W1AM: 6, W1PM: 6, W2AM: 6, W2PM: 0 };
+    check(c.renderVals().weeks[0].full, true);
+    check(c.renderVals().weeks[0].closedNotFull, false);
+    check(c.renderVals().weeks[1].full, false);
     c.state.counts = { W2AM: 6, W2PM: 6 };
-    assert.equal(c.renderVals().weeks[0].full, true); checks++;
+    check(c.renderVals().weeks[1].full, true);
     c.state.counts = {};
     h.clock(FIRST_CUTOFF - 1);
     c.state.sels = { 0: 'am', 1: 'pm' };
-    const staleView = c.renderVals();
+    const stale = c.renderVals();
     h.clock(FIRST_CUTOFF);
-    staleView.submit({ preventDefault() {}, target: null });
-    assert.equal(h.requests.length, 0); checks++;
-    assert.deepEqual(Object.keys(c.state.sels), ['1']); checks++;
-    assert.equal(c.state.sent, false); checks++;
+    stale.submit({ preventDefault() {}, target: null });
+    check(h.requests.length, 0);
+    check(Object.keys(c.state.sels), ['1']);
     const before = JSON.stringify(c.state.sels);
-    staleView.weeks[0].pick();
-    staleView.weeks[0].pickPm({ stopPropagation() {} });
-    assert.equal(JSON.stringify(c.state.sels), before); checks++;
-    c.state.booking = { weeksSel: [{ i: 0, s: 'am' }] };
-    c.state.sent = true;
+    stale.weeks[0].pick(); stale.weeks[0].pickPm({ stopPropagation() {} });
+    check(JSON.stringify(c.state.sels), before);
+    c.state.booking = { weeksSel: [{ i: 0, s: 'am' }] }; c.state.sent = true;
     await c.renderVals().pay({ preventDefault() {} });
-    assert.equal(h.requests.length, 0); checks++;
-    assert.equal(c.state.sent, false); checks++;
+    check(h.requests.length, 0); check(c.state.sent, false);
     c.state.booking = { weeksSel: [{ i: 1, s: 'pm' }], ref: 'fixture-ref', kidsCount: 1, lang };
     c.state.holding = false;
     await c.renderVals().pay({ preventDefault() {} });
-    assert.equal(h.requests.length, 1); checks++;
-    assert.deepEqual(JSON.parse(h.requests[0].options.body).weeks, [{ i: 1, s: 'pm' }]); checks++;
-    // A tab kept open over the boundary must clear the expired pending week.
+    check(h.requests.length, 1);
+    check(JSON.parse(h.requests[0].options.body).weeks, [{ i: 1, s: 'pm' }]);
     h.clock(FIRST_CUTOFF - 1);
     c.state.sels = { 0: 'am', 1: 'pm' };
-    c.state.booking = { weeksSel: [{ i: 0, s: 'am' }] };
-    c.state.sent = true;
+    c.state.booking = { weeksSel: [{ i: 0, s: 'am' }] }; c.state.sent = true;
     c.startBookingClock();
-    assert.equal(h.listeners.size, 3); checks++;
-    const timer = [...h.timers.values()][0];
-    assert.equal(timer.ms, 2); checks++;
-    h.clock(FIRST_CUTOFF);
-    timer.fn();
-    assert.deepEqual(Object.keys(c.state.sels), ['1']); checks++;
-    assert.equal(c.state.sent, false); checks++;
-    c.stopBookingClock();
-    assert.equal(h.listeners.size, 0); checks++;
-    h.clock(FIRST_CUTOFF + 12 * WEEK);
-    assert.equal(c.renderVals().weeks.length, 0); checks++;
-    assert.equal(c.renderVals().noUpcomingWeeks, true); checks++;
+    check(h.listeners.size, 3);
+    const timer = [...h.timers.values()][0]; check(timer.ms, 2);
+    h.clock(FIRST_CUTOFF); timer.fn();
+    check(Object.keys(c.state.sels), ['1']); check(c.state.sent, false);
+    h.clock(FIRST_CUTOFF + 2 * WEEK);
+    h.listeners.get('window:focus')();
+    check(c.renderVals().weeks[0].days, labels[1]);
+    c.stopBookingClock(); check(h.listeners.size, 0); check(h.timers.size, 0);
+    // Retained history must disappear even after the last scheduled class closes.
+    h.clock(FIRST_CUTOFF + 13 * WEEK); check(c.renderVals().weeks.length, 0);
+    c.state.sels = { 0: 'am' }; c.state.booking = { weeksSel: [{ i: 0, s: 'am' }] };
+    h.ctx.location.search = '?held=1'; c.startBookingClock();
+    check(Object.keys(c.state.sels), ['0']); c.stopBookingClock();
+    h.ctx.location.search = '?cancel=fixture'; c.startBookingClock();
+    check(Object.keys(c.state.sels), ['0']); c.stopBookingClock();
   }
-  console.log(`${file}: ${checks} booking-cutoff assertions passed (EN + Chinese)`);
-  return checks;
+  console.log(`${file}: ${checks} rolling-history assertions passed; emitted script and images preserved`);
 }
 
 export async function build() {
   const pending = [];
   for (const file of ['index.html', 'hk.html']) {
-    const original = fs.readFileSync(file, 'utf8');
-    const patched = patchHtml(original);
+    const patched = patchHtml(fs.readFileSync(file, 'utf8'));
     await verifyComponent(patched.source, file);
     pending.push({ file, ...patched });
   }
-  // Write neither page unless both original components pass every test.
   for (const page of pending) fs.writeFileSync(page.file, page.html);
-  console.log('Booking deadline applied to both original pages; existing images and design preserved.');
+  console.log('Two-week booking history applied safely to both original HTML pages.');
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await build();
