@@ -77,12 +77,13 @@ async function isolateNetwork(page, origins, holdRequests) {
           assert.equal(response.status(), 200);
           await page.waitForFunction(() => window.__dcRegistry && Object.values(window.__dcRegistry).some(r => r.Logic));
           assert.equal(await page.locator('.sc-logic-error').count(), 0, 'No template runtime error');
-          assert.equal(await page.evaluate(() => document.querySelector('script[data-dc-script]').textContent.includes('TWC_BOOKING_HISTORY_V2')), true);
+          assert.equal(await page.evaluate(() => document.querySelector('script[data-dc-script]').textContent.includes(MARKER), MARKER), true);
           const zh = pagePath === '/hk';
           const label = i => zh ? ['10月5–8日', '10月12–15日', '10月19–22日'][i] : ['Oct 5–8', 'Oct 12–15', 'Oct 19–22'][i];
           const tile = i => page.locator('#book').getByText(label(i), { exact: true });
           await tile(0).waitFor({ state: 'visible' });
           await tile(1).waitFor({ state: 'visible' });
+          await page.getByText('¥48,000', { exact: true }).first().waitFor({ state: 'visible' });
           await page.waitForFunction(() => document.querySelector('#book').textContent.includes('fully booked'));
           await page.clock.pauseAt(START);
           await tile(0).click();
@@ -100,13 +101,20 @@ async function isolateNetwork(page, origins, holdRequests) {
           await page.clock.runFor(50);
           await tile(0).waitFor({ state: 'detached' });
           await tile(1).waitFor({ state: 'visible' }); await tile(2).waitFor({ state: 'visible' });
-          await page.getByRole('button', { name: zh ? 'EN' : '繁體中文', exact: true }).click();
-          assert.equal(await page.locator('.sc-logic-error').count(), 0);
-          assert.equal(await page.locator('body').innerText().then(t => t.includes('48,000')), true);
           await page.clock.setSystemTime(new Date('2027-01-05T00:00:00+09:00'));
           await page.evaluate(() => window.dispatchEvent(new Event('pageshow')));
           await page.clock.runFor(50);
-          await page.locator('#book').getByText(zh ? 'New dates will be announced soon. Please contact us about future weeks.' : '新一期日期將會公布，歡迎聯絡我們查詢。', { exact: true }).waitFor({ state: 'visible' });
+          const emptyEn = 'New dates will be announced soon. Please contact us about future weeks.';
+          const emptyZh = '新一期日期將會公布，歡迎聯絡我們查詢。';
+          await page.locator('#book').getByText(zh ? emptyZh : emptyEn, { exact: true }).waitFor({ state: 'visible' });
+          // Language controls may navigate. Allow mounting on the destination and
+          // await visible content rather than taking a snapshot during navigation.
+          await page.clock.resume();
+          await page.getByRole('button', { name: zh ? 'EN' : '繁體中文', exact: true }).click();
+          await page.getByText('¥48,000', { exact: true }).first().waitFor({ state: 'visible' });
+          await page.locator('#book').getByText(zh ? emptyEn : emptyZh, { exact: true }).waitFor({ state: 'visible' });
+          assert.equal(await page.locator('.sc-logic-error').count(), 0);
+          assert.equal(await page.locator('body').innerText().then(t => t.includes('48,000')), true);
           assert.deepEqual(errors, []); assert.equal(holdRequests.length, 0);
           console.log(`${live ? 'PRODUCTION' : 'BUILT HTML'} ${engine} ${pagePath}: render, prices, language, capacity, 2-week history and timer rollover passed`);
           await page.close();
