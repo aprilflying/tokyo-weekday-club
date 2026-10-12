@@ -69,6 +69,27 @@ async function handle(request) {
     .sort((a, b) => a.i - b.i) : [];
   if (weeks.length === 0) return bad('no weeks');
 
+  // At midnight Tuesday in Tokyo, bookings for the Monday–Thursday
+  // class week close. This check is server-side, so an old open browser
+  // tab or a hand-crafted checkout request cannot bypass the deadline.
+  const tokyoToday = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date());
+  const bookingYear = 2026;
+  const firstMondayUtc = Date.UTC(bookingYear, 9, 5);
+  const todayUtc = Date.UTC(
+    Number(tokyoToday.slice(0, 4)),
+    Number(tokyoToday.slice(5, 7)) - 1,
+    Number(tokyoToday.slice(8, 10))
+  );
+  const expired = weeks.some(w => todayUtc >= firstMondayUtc + w.i * 7 * 86400000 + 86400000);
+  if (expired) {
+    return Response.json({
+      ok: false, code: 'week_closed',
+      error: 'One or more selected weeks are closed for booking. Please refresh and choose an upcoming week.',
+    }, { status: 409 });
+  }
+
   const weekCodes = weeks.map(w => `W${w.i + 1}${w.s.toUpperCase()}`);
   const totalJpy  = PRICE_PER_WEEK_JPY * weeks.length * kids;
 
