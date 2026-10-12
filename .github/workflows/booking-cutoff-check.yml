@@ -1,19 +1,33 @@
 name: Booking cutoff regression checks
 on:
   push:
-    branches: [fix/tokyo-tuesday-booking-cutoff, main]
-    paths: ['index.html', 'hk.html', 'api/hold.js', 'vercel.json', 'scripts/build-booking-cutoff.mjs', 'scripts/verify-booking-api.mjs', '.github/workflows/booking-cutoff-check.yml']
+    branches: [fix/tokyo-tuesday-booking-cutoff, fix/rolling-booking-history, main]
+    paths: ['index.html', 'hk.html', 'support.js', 'api/hold.js', 'vercel.json', 'scripts/build-booking-cutoff.mjs', 'scripts/verify-booking-api.mjs', 'scripts/check-booking-browser.cjs', '.github/workflows/booking-cutoff-check.yml']
 permissions:
   contents: read
 jobs:
   booking-cutoff:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
       - name: Verify API deadlines without live Stripe calls
         run: node scripts/verify-booking-api.mjs
-      - name: Verify booking deadlines on original English and Chinese pages
+      - name: Validate and generate both original HTML pages
         run: node scripts/build-booking-cutoff.mjs
+      - name: Install isolated browser test dependencies
+        run: |
+          testdir="$RUNNER_TEMP/twc-browser-check"
+          mkdir -p "$testdir"
+          npm install --prefix "$testdir" --ignore-scripts --no-audit --no-fund playwright@1.64.0 react@18.3.1 react-dom@18.3.1
+          "$testdir/node_modules/.bin/playwright" install --with-deps chromium webkit
+          echo "NODE_PATH=$testdir/node_modules" >> "$GITHUB_ENV"
+      - name: Verify browser rendering and rolling history
+        run: node scripts/check-booking-browser.cjs
+      - name: Verify production after GitHub-to-Vercel release
+        if: github.ref == 'refs/heads/main'
+        env:
+          TWC_CHECK_LIVE: '1'
+        run: node scripts/check-booking-browser.cjs
