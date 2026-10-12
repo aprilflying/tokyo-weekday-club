@@ -1,0 +1,17 @@
+name: Booking cutoff regression checks
+on:
+  push:
+    branches: [fix/tokyo-tuesday-booking-cutoff, main]
+    paths: ['index.html', 'hk.html', 'api/hold.js', 'scripts/build-booking-cutoff.mjs', '.github/workflows/booking-cutoff-check.yml']
+permissions:
+  contents: read
+jobs:
+  booking-cutoff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Verify booking deadlines on original English and Chinese pages
+        run: node scripts/build-booking-cutoff.mjs
