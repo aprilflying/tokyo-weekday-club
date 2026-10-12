@@ -1,4 +1,4 @@
-/** Browser regression tests. All booking writes and third-party tracking blocked. */
+/** Browser regression tests. All booking writes and tracking are intercepted. */
 const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
@@ -29,6 +29,23 @@ async function waitForProduction() {
   throw new Error('Updated production HTML not observed within deployment wait window');
 }
 
+async function isolateNetwork(page, origins, holdRequests) {
+  await page.route('**/*', async route => {
+    const request = route.request(), url = new URL(request.url());
+    if (url.pathname === '/api/hold') {
+      holdRequests.push(request.postData());
+      return route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({ code: 'week_closed' }) });
+    }
+    // Even a failing test must never create a booking, send an email or charge.
+    if (!['GET', 'HEAD'].includes(request.method())) return route.fulfill({ status: 400, body: 'Test blocked a write' });
+    if (url.hostname === 'unpkg.com' && url.pathname.includes('react-dom@18.3.1/')) return route.fulfill({ path: path.join(domDir, 'umd/react-dom.production.min.js'), contentType: 'text/javascript' });
+    if (url.hostname === 'unpkg.com' && url.pathname.includes('react@18.3.1/')) return route.fulfill({ path: path.join(reactDir, 'umd/react.production.min.js'), contentType: 'text/javascript' });
+    if (url.hostname === 'script.google.com' || url.hostname === 'script.googleusercontent.com') return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ max: 6, min: 3, W1AM: 6, W1PM: 6 }) });
+    if (origins.includes(url.origin) || ['data:', 'blob:'].includes(url.protocol)) return route.continue();
+    return route.fulfill({ status: 200, contentType: request.resourceType() === 'stylesheet' ? 'text/css' : 'text/javascript', body: '' });
+  });
+}
+
 (async () => {
   const server = http.createServer((req, res) => {
     const pathname = new URL(req.url, 'http://localhost').pathname;
@@ -48,24 +65,14 @@ async function waitForProduction() {
       const browser = await browserType.launch();
       try {
         for (const pagePath of ['/', '/hk']) {
+          console.log(`${engine} ${pagePath}: loading ${live ? 'production' : 'generated HTML'}`);
           const page = await browser.newPage({ viewport: { width: 1365, height: 900 }, timezoneId: 'America/Los_Angeles', reducedMotion: 'reduce' });
           const errors = [], holdRequests = [];
           page.on('pageerror', error => errors.push(error.message));
-          await page.clock.install({ time: START });
-          await page.clock.pauseAt(START);
-          await page.route('**/*', async route => {
-            const request = route.request(), url = new URL(request.url());
-            if (url.pathname === '/api/hold') { holdRequests.push(request.postData()); return route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({ code: 'week_closed' }) }); }
-            if (url.hostname === 'unpkg.com' && url.pathname.includes('react-dom@18.3.1/')) return route.fulfill({ path: path.join(domDir, 'umd/react-dom.production.min.js'), contentType: 'text/javascript' });
-            if (url.hostname === 'unpkg.com' && url.pathname.includes('react@18.3.1/')) return route.fulfill({ path: path.join(reactDir, 'umd/react.production.min.js'), contentType: 'text/javascript' });
-            if (url.hostname === 'script.google.com' || url.hostname === 'script.googleusercontent.com') {
-              assert.equal(request.method(), 'GET', 'No real sheet submissions in browser tests');
-              return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ max: 6, min: 3, W1AM: 6, W1PM: 6 }) });
-            }
-            if (url.origin === base || url.origin === local) return route.continue();
-            if (['data:', 'blob:'].includes(url.protocol)) return route.continue();
-            return route.fulfill({ status: 200, contentType: request.resourceType() === 'stylesheet' ? 'text/css' : 'text/javascript', body: '' });
-          });
+          page.setDefaultTimeout(15000);
+          // Keep timers running while React mounts; freeze only after rendering.
+          await page.clock.install({ time: new Date(START.getTime() - 60000) });
+          await isolateNetwork(page, [base, local], holdRequests);
           const response = await page.goto(base + pagePath, { waitUntil: 'domcontentloaded', timeout: 45000 });
           assert.equal(response.status(), 200);
           await page.waitForFunction(() => window.__dcRegistry && Object.values(window.__dcRegistry).some(r => r.Logic));
@@ -76,28 +83,29 @@ async function waitForProduction() {
           const tile = i => page.locator('#book').getByText(label(i), { exact: true });
           await tile(0).waitFor({ state: 'visible' });
           await tile(1).waitFor({ state: 'visible' });
-          // Verify truth-based capacity label and that the closed tile cannot select.
           await page.waitForFunction(() => document.querySelector('#book').textContent.includes('fully booked'));
+          await page.clock.pauseAt(START);
           await tile(0).click();
           assert.equal(await page.locator('#book').getByText('fully booked · 已滿', { exact: true }).count(), 1);
           assert.equal(await page.evaluate(() => document.querySelector('#book').textContent.includes('NaN')), false);
-          // Keep two closed weeks after the second Tuesday, remove the oldest on the third.
+          // Keep two closed weeks on second Tuesday. The third removes the oldest.
           await page.clock.setSystemTime(new Date('2026-10-13T00:00:00+09:00'));
           await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+          await page.clock.runFor(50);
           await page.locator('#book').getByText(zh ? '預約已截止' : 'Bookings closed', { exact: true }).waitFor({ state: 'visible' });
           assert.equal(await tile(0).count(), 1); assert.equal(await tile(1).count(), 1);
           await page.clock.setSystemTime(new Date('2026-10-19T23:59:59.990+09:00'));
           await page.evaluate(() => window.dispatchEvent(new Event('focus')));
-          // No focus event here: the scheduled timer itself must remove the old tile.
-          await page.clock.runFor(12);
+          // No focus event here: the scheduled timer must remove the old tile.
+          await page.clock.runFor(50);
           await tile(0).waitFor({ state: 'detached' });
           await tile(1).waitFor({ state: 'visible' }); await tile(2).waitFor({ state: 'visible' });
-          // Language switch must keep a populated page and correct prices.
           await page.getByRole('button', { name: zh ? 'EN' : '繁體中文', exact: true }).click();
           assert.equal(await page.locator('.sc-logic-error').count(), 0);
           assert.equal(await page.locator('body').innerText().then(t => t.includes('48,000')), true);
           await page.clock.setSystemTime(new Date('2027-01-05T00:00:00+09:00'));
           await page.evaluate(() => window.dispatchEvent(new Event('pageshow')));
+          await page.clock.runFor(50);
           await page.locator('#book').getByText(zh ? 'New dates will be announced soon. Please contact us about future weeks.' : '新一期日期將會公布，歡迎聯絡我們查詢。', { exact: true }).waitFor({ state: 'visible' });
           assert.deepEqual(errors, []); assert.equal(holdRequests.length, 0);
           console.log(`${live ? 'PRODUCTION' : 'BUILT HTML'} ${engine} ${pagePath}: render, prices, language, capacity, 2-week history and timer rollover passed`);
@@ -105,7 +113,8 @@ async function waitForProduction() {
         }
         if (!live) {
           const page = await browser.newPage();
-          await page.route('https://unpkg.com/**', route => route.fulfill({ path: path.join(route.request().url().includes('react-dom@') ? domDir : reactDir, route.request().url().includes('react-dom@') ? 'umd/react-dom.production.min.js' : 'umd/react.production.min.js'), contentType: 'text/javascript' }));
+          page.setDefaultTimeout(15000);
+          await isolateNetwork(page, [local], []);
           await page.goto(local + '/_broken-control', { waitUntil: 'domcontentloaded' });
           await page.locator('.sc-logic-error').waitFor({ state: 'visible' });
           console.log(`${engine}: negative control detected the original truncated-script failure`);
@@ -114,4 +123,4 @@ async function waitForProduction() {
       } finally { await browser.close(); }
     }
   } finally { await new Promise(resolve => server.close(resolve)); }
-})().catch(error => { console.error(error.message); process.exitCode = 1; });
+})().catch(error => { console.error(error.stack || error.message); process.exitCode = 1; });
