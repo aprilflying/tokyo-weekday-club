@@ -1,4 +1,5 @@
 {
   "cleanUrls": true,
-  "buildCommand": "node scripts/build-booking-cutoff.mjs"
+  "buildCommand": "node scripts/build-booking-cutoff.mjs",
+  "outputDirectory": "."
 }
