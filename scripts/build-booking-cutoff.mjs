@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import { pathToFileURL } from 'node:url';
+import { INLINE_BOOKING_METHODS } from './inline-booking.mjs';
 
 const MARKER = 'TWC_BOOKING_HISTORY_V2';
 const FIRST_CUTOFF = Date.parse('2026-10-06T00:00:00+09:00');
@@ -79,9 +80,10 @@ export function patchHtml(html) {
   const match = scriptSource(html);
   const original = match[1];
   let source = original;
-  source = once(source, 'class Component extends DCLogic {', 'class Component extends DCLogic {' + METHODS, 'Component declaration');
-  source = once(source, '  componentDidMount() {', '  componentDidMount() {\n    this.startBookingClock();', 'mount hook');
-  source = once(source, '  componentWillUnmount() {', '  componentWillUnmount() { this.stopBookingClock();', 'unmount hook');
+  source = once(source, '  renderVals() {', '  weeklyRenderVals() {', 'base booking values');
+  source = once(source, 'class Component extends DCLogic {', 'class Component extends DCLogic {' + METHODS + INLINE_BOOKING_METHODS, 'Component declaration');
+  source = once(source, '  componentDidMount() {', '  componentDidMount() {\n    this.startBookingClock();\n    this.startInlineBooking();', 'mount hook');
+  source = once(source, '  componentWillUnmount() {', '  componentWillUnmount() { this.stopBookingClock(); this.stopInlineBooking();', 'unmount hook');
   source = once(source, '    const sels = this.state.sels;', '    const sels = this.openBookingSelections();', 'booking selections');
   source = once(source, '      const full = amFull && pmFull;', '      const full = amFull && pmFull && !(amClosed && pmClosed);\n      const closed = !Component.bookingWeekOpen(i) || (amClosed && pmClosed);', 'capacity and deadline');
   source = once(source, 'days: en ? d : zhD(d), selected, full,', 'days: en ? d : zhD(d), selected, full, closed, closedNotFull: closed && !full,', 'tile states');
@@ -98,7 +100,7 @@ export function patchHtml(html) {
         if (picked.length === 0) { this.setState({ noWeeks: true }); return; }
         const fd = new FormData(e.target);`, 'form submission guard');
   source = once(source, '        if (!b || this.state.holding) return;', `        if (!b || this.state.holding) return;
-        if (!Array.isArray(b.weeksSel) || !b.weeksSel.length || b.weeksSel.some(w => !Component.bookingWeekOpen(w.i))) { this.rejectClosedBooking(); return; }`, 'checkout guard');
+        if (b.bookingType !== 'day' && (!Array.isArray(b.weeksSel) || !b.weeksSel.length || b.weeksSel.some(w => !Component.bookingWeekOpen(w.i)))) { this.rejectClosedBooking(); return; }`, 'checkout guard');
   source = once(source, "          if (j.code === 'full') {", "          if (j.code === 'week_closed') { this.rejectClosedBooking(); return; }\n          if (j.code === 'full') {", 'server deadline response');
   source = once(source, '      weeks, selDays, selDaysZh,', '      noUpcomingWeeks: !weeks.some(w => !w.closed),\n      weeks, selDays, selDaysZh,', 'empty-term state');
   new vm.Script(source);
@@ -225,6 +227,54 @@ export async function verifyComponent(source, file) {
     check(Object.keys(c.state.sels), ['0']); c.stopBookingClock();
   }
   console.log(`${file}: ${checks} rolling-history assertions passed; emitted script and images preserved`);
+  await verifyInlineBooking(source, file);
+}
+
+async function verifyInlineBooking(source, file) {
+  for (const lang of ['en', 'zh']) {
+    const h = harness(source, lang), c = new h.C();
+    h.clock(Date.parse('2026-11-08T12:00:00+09:00'));
+    c.state.counts = { bookingVersion: 9, sessions: {}, classes: {} };
+    c.renderVals().chooseSingleDay();
+    let v = c.renderVals();
+    assert.equal(v.dayWeek, '7', 'Start on the first week with bookable days');
+    assert.equal(v.isSingleDay, true);
+    v.dayRows[0].sessions[0].pick();
+    c.renderVals().dayRows[0].sessions[1].pick();
+    assert.equal(c.dailyChoices().length, 1, 'Only one session per day');
+    assert.equal(c.dailyChoices()[0].s, 'pm');
+    c.renderVals().dayRows[1].sessions[0].pick();
+    c.renderVals().changeDayWeek({ target: { value: '8' } });
+    c.renderVals().dayRows[0].sessions[1].pick();
+    c.state.kids = 2; c.state.termsOk = true;
+    assert.equal(c.renderVals().formTotal, '¥84,000', 'Three dates across two weeks for two children');
+    c.state.counts.sessions.D20261123PM = 5;
+    assert.equal(c.renderVals().submitDisabled, true, 'Capacity uses number of children');
+    c.state.counts.sessions.D20261123PM = 0;
+    const fields = { terms: ['yes'], firstname: ['Test'], lastname: ['Parent'], email: ['test@example.invalid'], dial: ['+852'], whatsapp: ['00000000'], kidfirst: ['ChildA', 'ChildB'], kidlast: ['Test', 'Test'], kidage: ['8', '9'] };
+    h.ctx.FormData = class { constructor(form) { return form; } };
+    const form = { get: k => fields[k]?.[0] || '', getAll: k => fields[k] || [] };
+    c.renderVals().submit({ preventDefault() {}, target: form });
+    assert.equal(c.state.sent, true);
+    assert.equal(c.state.booking.bookingType, 'day');
+    await c.renderVals().pay({ preventDefault() {} });
+    const sent = JSON.parse(h.requests[0].options.body);
+    assert.equal(sent.bookingType, 'day');
+    assert.equal(sent.kidsCount, 2);
+    assert.deepEqual(sent.days, [{ date: '2026-11-23', s: 'pm' }, { date: '2026-11-24', s: 'am' }, { date: '2026-11-30', s: 'pm' }]);
+    assert.deepEqual(sent.weeks, []);
+    h.clock(Date.parse('2026-11-10T14:00:00+09:00'));
+    c.state.holding = false;
+    await c.renderVals().pay({ preventDefault() {} });
+    assert.equal(h.requests.length, 1, 'Expired daily selection never reaches checkout');
+    assert.equal(c.state.sent, false);
+    c.renderVals().chooseWholeWeek();
+    assert.equal(c.renderVals().isWeekly, true);
+    assert.equal(c.dailyChoices().length, 0);
+    c.state.sels = { 8: 'am' };
+    assert.equal(c.renderVals().formTotal, '¥96,000', 'Weekly price remains 48000 per child');
+  }
+  console.log(`${file}: bilingual inline modes, cross-week days, totals, capacity, checkout payload and expiry passed`);
 }
 
 export async function build({ write = true } = {}) {

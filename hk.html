@@ -356,7 +356,7 @@ summary::-webkit-details-marker{display:none}
     <sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><h2 style="font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-weight:900;font-size:clamp(30px,4vw,42px);letter-spacing:-0.01em;margin:0 0 36px">By the day or week</h2></sc-if>
     <sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><h2 style="font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-weight:900;font-size:clamp(28px,3.6vw,38px);margin:0 0 36px">收費一目了然</h2></sc-if>
     <div style="position:relative;background:#FAF7F2;border:1px solid #0F0F12;border-radius:22px;overflow:hidden">
-      <div style="display:grid;grid-template-columns:1fr auto;gap:8px;padding:24px 32px;background:#F8DDD8;border-bottom:1px dashed rgba(15,15,18,.15)"><div><sc-if value="{{ en }}"><strong>Single day</strong><div style="font-size:13.5px">One morning or afternoon · 3 hours</div><a href="/daily" style="color:#C0392B">Choose your days →</a></sc-if><sc-if value="{{ zh }}"><strong>單日報名</strong><div style="font-size:13.5px">自選一個上午或下午 · 3小時</div><a href="/daily?lang=zh" style="color:#C0392B">選擇上課日期 →</a></sc-if></div><div style="font-weight:600;font-size:22px;text-align:right">¥14,000<div style="font-size:12px;font-weight:400"><sc-if value="{{ en }}">per child / day</sc-if><sc-if value="{{ zh }}">每位／每日</sc-if></div></div></div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:8px;padding:24px 32px;background:#F8DDD8;border-bottom:1px dashed rgba(15,15,18,.15)"><div><sc-if value="{{ en }}"><strong>Single day</strong><div style="font-size:13.5px">One morning or afternoon · 3 hours</div><a href="#book" onClick="{{ chooseSingleDay }}" style="color:#C0392B">Choose your days →</a></sc-if><sc-if value="{{ zh }}"><strong>單日報名</strong><div style="font-size:13.5px">自選一個上午或下午 · 3小時</div><a href="#book" onClick="{{ chooseSingleDay }}" style="color:#C0392B">選擇上課日期 →</a></sc-if></div><div style="font-weight:600;font-size:22px;text-align:right">¥14,000<div style="font-size:12px;font-weight:400"><sc-if value="{{ en }}">per child / day</sc-if><sc-if value="{{ zh }}">每位／每日</sc-if></div></div></div>
       <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:baseline;padding:24px 32px;border-bottom:1px dashed rgba(15,15,18,.15)">
         <div><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><strong style="font-size:17px">1 week</strong><div style="font-size:13.5px;color:rgba(15,15,18,.55);margin-top:2px">4 mornings or afternoons · 3 hours a day</div></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><strong style="font-size:17px">1星期</strong><div style="font-size:13.5px;color:rgba(15,15,18,.55);margin-top:2px">4個上午或下午，每日3小時</div></sc-if></div>
         <div style="text-align:right"><div style="font-family:'JetBrains Mono',monospace;font-weight:600;font-size:22px">¥48,000</div><div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(15,15,18,.5);margin-top:2px">{{ hkd1 }}</div></div>
@@ -436,10 +436,13 @@ summary::-webkit-details-marker{display:none}
     </sc-if>
     <sc-if value="{{ notCancelling }}" hint-placeholder-val="{{ true }}">
     <div style="font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-weight:900;font-size:clamp(32px,4.6vw,50px);line-height:1.1;letter-spacing:-0.01em;color:#FAF7F2;margin-bottom:10px"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span style="font-style:italic;font-weight:600;color:#EFB9AE">Open for booking</span> now.</sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span style="color:#EFB9AE">現已開放</span>預約。</sc-if></div>
-    <sc-if value="{{ notSent }}" hint-placeholder-val="{{ true }}">
-<div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap"><a href="{{ dailyHref }}" style="padding:13px 22px;border:1px solid #FAF7F2;border-radius:999px;background:#FAF7F2;color:#C0392B;text-decoration:none;font-weight:600"><sc-if value="{{ en }}">Single days · ¥14,000 →</sc-if><sc-if value="{{ zh }}">單日 · ¥14,000 →</sc-if></a><span style="padding:13px 22px;border:1px solid #FAF7F2;border-radius:999px"><sc-if value="{{ en }}">4-day week · ¥48,000</sc-if><sc-if value="{{ zh }}">4日整週 · ¥48,000</sc-if></span></div>
-      <div style="margin-top:36px;display:grid;gap:28px">
-        <div>
+    <div style="display:{{ formDisplay }}">
+<div role="group" aria-label="Booking type" style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
+  <button type="button" aria-pressed="{{ isWeekly }}" onClick="{{ chooseWholeWeek }}" style="padding:13px 22px;border:1px solid #FAF7F2;border-radius:999px;background:{{ weekModeBg }};color:{{ weekModeFg }};font:inherit;font-weight:600;cursor:pointer"><sc-if value="{{ en }}">4-day week · ¥48,000</sc-if><sc-if value="{{ zh }}">4 日整週 · ¥48,000</sc-if></button>
+  <button type="button" aria-pressed="{{ isSingleDay }}" onClick="{{ chooseSingleDay }}" style="padding:13px 22px;border:1px solid #FAF7F2;border-radius:999px;background:{{ dayModeBg }};color:{{ dayModeFg }};font:inherit;font-weight:600;cursor:pointer"><sc-if value="{{ en }}">Single Day · ¥14,000</sc-if><sc-if value="{{ zh }}">單日 Single Day · ¥14,000</sc-if></button>
+</div>
+      <div style="margin-top:28px;display:grid;gap:28px">
+        <sc-if value="{{ isWeekly }}"><div>
           <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.1em;color:rgba(250,247,242,.85);margin-bottom:12px"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>1 · Pick your weeks, as many as you like. Choose morning or afternoon for each.</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>1 · 選擇週次，可選上午或下午</span></sc-if></div>
           <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(250,247,242,.75);margin-bottom:12px"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>Each dated session needs 3–6 children and must be confirmed at least 14 days ahead. A weekly booking is charged once all four days are confirmed.</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>每節最少3人、最多6人，須提前最少14日確認開班。整週須四日均確認後才收費。</span></sc-if></div>
           <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start">
@@ -465,7 +468,37 @@ summary::-webkit-details-marker{display:none}
           </div>
           <div style="margin-top:14px;font-family:'Caveat','Huninn','Zen Maru Gothic',cursive;font-size:15px;color:#F8DDD8"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>We'll arrange the right program after you book. No repeated lessons.</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>預約後我們會為每一週安排合適的課程，小朋友不會重複上課。</span></sc-if></div>
           <sc-if value="{{ anyFull }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(250,247,242,.8)"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>a greyed week is full. email </span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>灰色週次已滿，可 email </span></sc-if><a href="mailto:hello@tokyoweekdayclub.com" style="color:#FAF7F2">hello@tokyoweekdayclub.com</a><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span> for the waitlist</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span> 排候補</span></sc-if></div></sc-if>
-        </div>
+        </div></sc-if>
+        <sc-if value="{{ isSingleDay }}">
+          <div style="display:grid;gap:16px">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.1em;color:rgba(250,247,242,.85)"><sc-if value="{{ en }}">1 · Choose a week, then your days and times</sc-if><sc-if value="{{ zh }}">1 · 先揀星期，再揀日期同時段</sc-if></div>
+            <label for="daily-week" style="font-weight:600"><sc-if value="{{ en }}">Week</sc-if><sc-if value="{{ zh }}">選擇星期</sc-if></label>
+            <select id="daily-week" value="{{ dayWeek }}" onChange="{{ changeDayWeek }}" disabled="{{ noDayWeeks }}" style="width:100%;max-width:440px;background:#FAF7F2;border:1px solid #0F0F12;border-radius:16px;padding:14px 16px;font:inherit;color:#0F0F12;cursor:pointer">
+              <sc-for list="{{ dayWeeks }}" as="week"><option value="{{ week.value }}">{{ week.label }}</option></sc-for>
+            </select>
+            <sc-if value="{{ availabilityMessage }}"><p role="status" style="margin:0">{{ availabilityMessage }}</p></sc-if>
+            <sc-if value="{{ noDayWeeks }}"><p style="margin:0"><sc-if value="{{ en }}">New dates will be announced soon. Please email us.</sc-if><sc-if value="{{ zh }}">新一期日期將會公布，歡迎電郵查詢。</sc-if></p></sc-if>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
+              <sc-for list="{{ dayRows }}" as="day">
+                <div style="background:#F8DDD8;color:#0F0F12;border:1px solid #0F0F12;border-radius:16px;padding:16px;min-width:0">
+                  <strong style="display:block;margin-bottom:12px">{{ day.title }}</strong>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <sc-for list="{{ day.sessions }}" as="session">
+                      <button type="button" onClick="{{ session.pick }}" disabled="{{ session.disabled }}" aria-pressed="{{ session.selected }}" aria-label="{{ session.label }}" style="border:1px solid #0F0F12;border-radius:12px;padding:12px 5px;font:inherit;cursor:pointer;background:{{ session.bg }};color:{{ session.fg }};opacity:{{ session.opacity }};min-width:0">
+                        <span style="display:block;font-size:13px;font-weight:700">{{ session.time }}</span><span style="display:block;font-size:11px;margin-top:6px">{{ session.hint }}</span>
+                      </button>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <p style="font-size:13px;line-height:1.65;margin:0;color:#F8DDD8"><sc-if value="{{ en }}">All times are Tokyo time. Choose one 3-hour session per day; you can select days across different weeks. Each class needs 3–6 children confirmed at least 14 days ahead. Confirmed classes accept bookings until the day before.</sc-if><sc-if value="{{ zh }}">全部為東京時間。每日可選一節 3 小時課堂，亦可跨星期選擇多日。每節最少 3 人、最多 6 人，須提前最少 14 日確認開班；已確認班可補位至前一日。</sc-if></p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px" aria-live="polite">
+              <sc-for list="{{ chosenDays }}" as="chosen"><button type="button" onClick="{{ chosen.remove }}" style="padding:9px 12px;border:1px solid #FAF7F2;border-radius:12px;background:transparent;color:#FAF7F2;font:inherit;font-size:13px;cursor:pointer">{{ chosen.label }} ×</button></sc-for>
+            </div>
+            <sc-if value="{{ weekSaving }}"><p style="padding:14px;border:1px solid #FAF7F2;border-radius:12px;margin:0;font-size:14px;line-height:1.6"><sc-if value="{{ en }}">All four days in the same session? Choose “4-day week” above for ¥48,000 per child — saving ¥8,000.</sc-if><sc-if value="{{ zh }}">同一星期、同一時段揀四日？可選上方「4 日整週」，每位 ¥48,000，比逐日報名慳 ¥8,000。</sc-if></p></sc-if>
+          </div>
+        </sc-if>
         <sc-if value="{{ holdError }}" hint-placeholder-val="{{ false }}"><div style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#F8DDD8">{{ holdError }}</div></sc-if>
         <form onSubmit="{{ submit }}" style="position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">
               <input name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;height:0;width:0">
@@ -487,7 +520,7 @@ summary::-webkit-details-marker{display:none}
           </select>
           <div style="grid-column:1/-1;display:grid;gap:14px">
             <sc-for list="{{ kidAges }}" as="k" hint-placeholder-count="1">
-              <div style="display:grid;grid-template-columns:1fr 1fr 140px;gap:14px">
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px">
                 <input required="{{ true }}" name="kidfirst" placeholder="{{ k.firstLabel }}" style="background:#FAF7F2;border:1px solid #0F0F12;border-radius:16px;padding:15px 18px;font-family:inherit;font-size:15px;color:#0F0F12;min-width:0">
                 <input required="{{ true }}" name="kidlast" placeholder="{{ k.lastLabel }}" style="background:#FAF7F2;border:1px solid #0F0F12;border-radius:16px;padding:15px 18px;font-family:inherit;font-size:15px;color:#0F0F12;min-width:0">
                 <select required="{{ true }}" name="kidage" style="background:#FAF7F2;border:1px solid #0F0F12;border-radius:16px;padding:15px 18px;font-family:inherit;font-size:15px;color:#0F0F12;cursor:pointer;appearance:none">
@@ -497,6 +530,7 @@ summary::-webkit-details-marker{display:none}
               </div>
             </sc-for>
           </div>
+          <div style="grid-column:1/-1;padding:18px 0;border-top:1px solid rgba(250,247,242,.35)" aria-live="polite"><strong style="font-size:28px">{{ formTotal }}</strong><div style="font-size:13px;margin-top:6px;color:#F8DDD8">{{ formBreakdown }}</div></div>
           <div style="grid-column:1/-1;display:grid;gap:14px;margin-top:6px">
             <label style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;color:#FAF7F2">
               <input type="checkbox" name="terms" value="yes" required="{{ true }}" onChange="{{ toggleTerms }}" style="width:18px;height:18px;margin:2px 0 0;flex-shrink:0;accent-color:#0F0F12;cursor:pointer">
@@ -504,17 +538,17 @@ summary::-webkit-details-marker{display:none}
             </label>
           </div>
           <button type="submit" disabled="{{ submitDisabled }}" style="background:#0F0F12;color:#FAF7F2;border:1px solid #0F0F12;border-radius:999px;padding:15px 26px;white-space:nowrap;font-family:inherit;font-weight:600;font-size:15.5px;cursor:{{ submitCursor }};opacity:{{ submitOp }};transition:transform .12s ease,box-shadow .12s ease" style-hover="transform:translate(-2px,-2px);box-shadow:4px 4px 0 #FAF7F2"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>Book {{ selDays }} →</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>預約{{ selDaysZh }} →</span></sc-if></button>
-          <sc-if value="{{ noWeeks }}" hint-placeholder-val="{{ false }}"><div style="grid-column:1/-1;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#F8DDD8"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>pick at least one week above first ↑</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>請先在上面選擇至少一個週次 ↑</span></sc-if></div></sc-if>
+          <sc-if value="{{ noWeeks }}" hint-placeholder-val="{{ false }}"><div style="grid-column:1/-1;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#F8DDD8"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>choose your dates above first ↑</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>請先在上面選擇日期及時段 ↑</span></sc-if></div></sc-if>
         </form>
       </div>
-    </sc-if>
+    </div>
     <sc-if value="{{ sent }}" hint-placeholder-val="{{ false }}">
       <div style="margin-top:36px;background:#FAF7F2;border:1px solid #0F0F12;border-radius:22px;padding:32px">
         <div style="display:flex;align-items:center;gap:16px;margin-bottom:22px">
           <svg viewBox="0 0 100 100" style="width:44px;height:44px;flex-shrink:0"><path d="M50 7 C 72 5, 93 20, 93 47 C 93 72, 74 93, 49 93 C 26 93, 7 74, 7 49 C 7 25, 28 9, 50 7 Z" fill="#E2694F" stroke="#26221F" stroke-width="2"></path></svg>
           <div>
             <strong style="font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-size:20px"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>Almost there.</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>就差最後一步。</span></sc-if></strong>
-            <div style="font-size:14.5px;color:rgba(15,15,18,.65);margin-top:3px"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>{{ selDays }} selected. Save a card; we charge only after all four days are confirmed with at least 3 children, at least 14 days ahead. Confirmed classes may be charged immediately. Classes that do not run are never charged.</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>你已選擇以下{{ selDaysZh }}。整週須四日均於上課前最少14日滿3人確認後才收費。已確認班可隨即扣款，未能開班不收費。</span></sc-if></div>
+            <div style="font-size:14.5px;color:rgba(15,15,18,.65);margin-top:3px">{{ reviewPolicy }}</div>
           </div>
         </div>
         <div style="display:grid;gap:10px;border-top:1px dashed rgba(15,15,18,.2);padding-top:18px;margin-bottom:24px">
@@ -574,12 +608,6 @@ class Component extends DCLogic {
       this.setState({ cancelRef: q.get('cancel'), cancelSig: q.get('sig') || q.get('t') || '', cancelState: 'ask' });
       setTimeout(() => { const el = document.getElementById('book'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset, behavior: 'auto' }); }, 400);
     }
-    if (Component.STRIPE.sheetEndpoint) {
-      fetch('/api/availability?_=' + Date.now())
-        .then(r => r.json())
-        .then(c => this.setState({ counts: c }))
-        .catch(() => {});
-    }
     const box = this.sunBoxRef.current, big = this.sunBigRef.current, small = this.sunSmallRef.current, mid = this.sunMidRef.current, tiny = this.sunTinyRef.current;
     if (!box || !big || !small || !mid || !tiny) return;
     const balls = [
@@ -634,7 +662,7 @@ class Component extends DCLogic {
     sheetEndpoint: 'https://script.google.com/macros/s/AKfycbwThrbKlH6gaWrqpzVSSM0D_5uKiAs8JA5Hr0TN-fWcErEbydmm3hkUsSpnLCnZBGMT/exec',
     sheetToken: 'CHANGE-ME-to-a-long-random-string'   // same string as the Apps Script and Vercel SITE_TOKEN
   };
-  state = { lang: 'zh', sent: false, sels: {}, pg: 0 };
+  state = { lang: 'zh', sent: false, sels: {}, daySels: {}, bookingType: new URLSearchParams(window.location.search).get('booking') === 'day' ? 'day' : 'week', pg: 0 };
   trackStart() { if (this._bkStarted) return; this._bkStarted = true; try { if (window.posthog && posthog.capture) posthog.capture('booking_started', { lang: this.state.lang ?? (document.documentElement.lang === 'zh-Hant' ? 'zh' : 'en') }); } catch (err) {} }
   renderVals() {
     const lang = this.state.lang ?? this.props.lang ?? 'zh';
@@ -737,10 +765,11 @@ class Component extends DCLogic {
           const r = await fetch(S.holdEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
             token: S.sheetToken, website: b.website,
             ref: b.ref, name: b.name, email: b.email, whatsapp: b.whatsapp,
-            kids: b.kids, kidsCount: b.kidsCount, weeks: b.weeksSel, lang: b.lang,
+            kids: b.kids, kidsCount: b.kidsCount, bookingType: b.bookingType || 'week', days: b.daysSel, weeks: b.weeksSel, lang: b.lang,
             insurance: b.insurance, terms: b.terms, referral: b.referral
           }) });
           const j = await r.json();
+          if (j.code === 'booking_closed' || j.code === 'day_closed') { this.setState({ holding: false, sent: false, holdError: en ? 'A selected date has closed. Please choose another date.' : '所選日期已截止，請選擇其他日期。' }); this.refreshBookingAvailability(); return; }
           if (j.code === 'full') {
             this.setState({ holding: false, sent: false, holdError: en
               ? 'Sorry, ' + (j.full || []).join(', ') + ' just filled up. Please pick another session.'

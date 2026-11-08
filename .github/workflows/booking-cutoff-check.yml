@@ -1,8 +1,8 @@
 name: Booking cutoff regression checks
 on:
   push:
-    branches: [feat/daily-booking-14000, main]
-    paths: ['lib/**', 'assets/**', 'operations/**', 'api/**', 'daily.html', 'scripts/verify-sheet-booking.mjs', 'index.html', 'hk.html', 'support.js', 'api/hold.js', 'vercel.json', 'scripts/build-booking-cutoff.mjs', 'scripts/verify-booking-api.mjs', 'scripts/check-booking-browser.cjs', '.github/workflows/booking-cutoff-check.yml']
+    branches: [feat/inline-daily-booking, main]
+    paths: ['lib/**', 'assets/**', 'operations/**', 'api/**', 'daily.html', 'scripts/**', 'index.html', 'hk.html', 'support.js', 'vercel.json', '.github/workflows/booking-cutoff-check.yml']
 permissions:
   contents: read
 jobs:
