@@ -156,7 +156,6 @@ function installDailyBookingV9(){
   if(!ss||ss.getId()!=='149xWTGnS1FtzWZeMEteNSS249RYIjNdLBEeJ3zHgHdk')throw new Error('Wrong booking spreadsheet; no changes made');
   var lock=LockService.getScriptLock();lock.waitLock(20000);
   try{bookingHolds_();reconcileClasses_();
-    if(!ScriptApp.getProjectTriggers().some(function(t){return t.getHandlerFunction()==='checkClassDeadlinesV9';}))ScriptApp.newTrigger('checkClassDeadlinesV9').timeBased().everyHours(1).create();
     if(!ScriptApp.getProjectTriggers().some(function(t){return t.getHandlerFunction()==='dailyEmails';}))ScriptApp.newTrigger('dailyEmails').timeBased().everyDays(1).atHour(8).inTimezone('Asia/Tokyo').create();
     console.log('TWC booking v9 ready: correct spreadsheet, daily price 14000, weekly price 48000, 3–6 children, 14-day confirmation. Existing data and triggers preserved. No emails sent by setup.');
   }finally{lock.releaseLock();}
