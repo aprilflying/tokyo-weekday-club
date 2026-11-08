@@ -40,7 +40,7 @@ async function isolateNetwork(page, origins, holdRequests) {
     if (!['GET', 'HEAD'].includes(request.method())) return route.fulfill({ status: 400, body: 'Test blocked a write' });
     if (url.hostname === 'unpkg.com' && url.pathname.includes('react-dom@18.3.1/')) return route.fulfill({ path: path.join(domDir, 'umd/react-dom.production.min.js'), contentType: 'text/javascript' });
     if (url.hostname === 'unpkg.com' && url.pathname.includes('react@18.3.1/')) return route.fulfill({ path: path.join(reactDir, 'umd/react.production.min.js'), contentType: 'text/javascript' });
-    if (url.hostname === 'script.google.com' || url.hostname === 'script.googleusercontent.com') return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ max: 6, min: 3, W1AM: 6, W1PM: 6 }) });
+    if (url.pathname === '/api/availability' || url.hostname === 'script.google.com' || url.hostname === 'script.googleusercontent.com') return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ max: 6, min: 3, W1AM: 6, W1PM: 6 }) });
     if (origins.includes(url.origin) || ['data:', 'blob:'].includes(url.protocol)) return route.continue();
     return route.fulfill({ status: 200, contentType: request.resourceType() === 'stylesheet' ? 'text/css' : 'text/javascript', body: '' });
   });

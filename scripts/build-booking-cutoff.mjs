@@ -83,7 +83,7 @@ export function patchHtml(html) {
   source = once(source, '  componentDidMount() {', '  componentDidMount() {\n    this.startBookingClock();', 'mount hook');
   source = once(source, '  componentWillUnmount() {', '  componentWillUnmount() { this.stopBookingClock();', 'unmount hook');
   source = once(source, '    const sels = this.state.sels;', '    const sels = this.openBookingSelections();', 'booking selections');
-  source = once(source, '      const full = amFull && pmFull;', '      const full = amFull && pmFull;\n      const closed = !Component.bookingWeekOpen(i);', 'capacity and deadline');
+  source = once(source, '      const full = amFull && pmFull;', '      const full = amFull && pmFull && !(amClosed && pmClosed);\n      const closed = !Component.bookingWeekOpen(i) || (amClosed && pmClosed);', 'capacity and deadline');
   source = once(source, 'days: en ? d : zhD(d), selected, full,', 'days: en ? d : zhD(d), selected, full, closed, closedNotFull: closed && !full,', 'tile states');
   source = once(source, '(!selected && !full) ?', '(!selected && !full && !closed) ?', 'tile hint');
   source = once(source, "cursor: full ? 'not-allowed'", "cursor: (full || closed) ? 'not-allowed'", 'tile cursor');
@@ -227,14 +227,14 @@ export async function verifyComponent(source, file) {
   console.log(`${file}: ${checks} rolling-history assertions passed; emitted script and images preserved`);
 }
 
-export async function build() {
+export async function build({ write = true } = {}) {
   const pending = [];
   for (const file of ['index.html', 'hk.html']) {
     const patched = patchHtml(fs.readFileSync(file, 'utf8'));
     await verifyComponent(patched.source, file);
     pending.push({ file, ...patched });
   }
-  for (const page of pending) fs.writeFileSync(page.file, page.html);
+  if (write) for (const page of pending) fs.writeFileSync(page.file, page.html);
   console.log('Two-week booking history applied safely to both original HTML pages.');
 }
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await build();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await build({ write: !process.argv.includes("--check") });
