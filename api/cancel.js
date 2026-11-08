@@ -15,6 +15,7 @@
 
 import Stripe from 'stripe';
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import { sheetRequest } from '../lib/sheet.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -50,7 +51,7 @@ async function handle(request) {
     return Response.json({
       ok: false,
       code: 'already_confirmed',
-      error: 'At least one of your weeks has already been confirmed and charged. Email hello@tokyoweekdayclub.com and we will apply the refund policy.',
+      error: 'At least one of your booked classes has already been confirmed and charged. Email hello@tokyoweekdayclub.com and we will apply the refund policy.',
     }, { status: 409 });
   }
 
@@ -66,7 +67,7 @@ async function handle(request) {
   }
   await stripe.customers.update(customer.id, { metadata: { cancelled: new Date().toISOString() } });
 
-  await sheet({ action: 'status', ref, status: 'cancelled', note: 'cancelled by parent' });
+  await sheetRequest({ action: 'status', ref, status: 'cancelled', note: 'cancelled by parent' });
 
   return Response.json({ ok: true, ref, weeks: mine.length });
 }
@@ -75,13 +76,6 @@ function validSig(ref, t) {
   const expected = createHmac('sha256', process.env.SITE_TOKEN || '').update(ref).digest('hex').slice(0, 16);
   if (t.length !== expected.length) return false;
   return timingSafeEqual(Buffer.from(t), Buffer.from(expected));
-}
-
-async function sheet(payload) {
-  if (!process.env.SHEET_URL) return;
-  try {
-    await fetch(process.env.SHEET_URL, { method: 'POST', body: JSON.stringify({ token: process.env.SHEET_TOKEN, ...payload }), redirect: 'follow' });
-  } catch (err) { console.error('sheet update failed', err); }
 }
 
 function bad(msg, status = 400) {
