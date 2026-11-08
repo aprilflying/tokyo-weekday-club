@@ -5,9 +5,16 @@ export const INLINE_BOOKING_METHODS = String.raw`
     this._refreshAvailability = () => this.refreshBookingAvailability();
     window.addEventListener('focus', this._refreshAvailability);
     this.refreshBookingAvailability();
+    // The exported site mounts after the browser's initial fragment jump.
+    // Position direct booking links once the form has been rendered.
+    if (window.location.hash === '#book') this._bookingAnchorTimer = setTimeout(() => {
+      const book = document.getElementById('book');
+      if (book) window.scrollTo({ top: book.getBoundingClientRect().top + window.pageYOffset - 80, behavior: 'auto' });
+    }, 400);
   }
   stopInlineBooking() {
     if (this._refreshAvailability) window.removeEventListener('focus', this._refreshAvailability);
+    clearTimeout(this._bookingAnchorTimer);
   }
   async refreshBookingAvailability() {
     try {
