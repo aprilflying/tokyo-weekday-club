@@ -22,7 +22,7 @@ async function waitForProduction() {
     try {
       const r = await fetch('https://www.tokyoweekdayclub.com/?booking-release=' + Date.now(), { signal: AbortSignal.timeout(15000) });
       const html = await r.text();
-      if (r.ok && html.includes(MARKER)) return;
+      if (r.ok && html.includes(MARKER) && html.includes('startInlineBooking')) return;
     } catch {}
     await new Promise(r => setTimeout(r, 10000));
   }
@@ -40,7 +40,7 @@ async function isolateNetwork(page, origins, holdRequests) {
     if (!['GET', 'HEAD'].includes(request.method())) return route.fulfill({ status: 400, body: 'Test blocked a write' });
     if (url.hostname === 'unpkg.com' && url.pathname.includes('react-dom@18.3.1/')) return route.fulfill({ path: path.join(domDir, 'umd/react-dom.production.min.js'), contentType: 'text/javascript' });
     if (url.hostname === 'unpkg.com' && url.pathname.includes('react@18.3.1/')) return route.fulfill({ path: path.join(reactDir, 'umd/react.production.min.js'), contentType: 'text/javascript' });
-    if (url.pathname === '/api/availability' || url.hostname === 'script.google.com' || url.hostname === 'script.googleusercontent.com') return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ max: 6, min: 3, W1AM: 6, W1PM: 6 }) });
+    if (url.pathname === '/api/availability' || url.hostname === 'script.google.com' || url.hostname === 'script.googleusercontent.com') return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ bookingVersion: 9, max: 6, min: 3, sessions: {}, classes: {}, confirmed: {}, W1AM: 6, W1PM: 6 }) });
     if (origins.includes(url.origin) || ['data:', 'blob:'].includes(url.protocol)) return route.continue();
     return route.fulfill({ status: 200, contentType: request.resourceType() === 'stylesheet' ? 'text/css' : 'text/javascript', body: '' });
   });
@@ -85,6 +85,33 @@ async function isolateNetwork(page, origins, holdRequests) {
           await tile(1).waitFor({ state: 'visible' });
           await page.getByText('¥48,000', { exact: true }).first().waitFor({ state: 'visible' });
           await page.waitForFunction(() => document.querySelector('#book').textContent.includes('fully booked'));
+          // Daily and weekly modes use one form without navigating away.
+          const initialUrl = page.url();
+          await page.locator('#book button').filter({ hasText: 'Single Day' }).click();
+          await page.locator('#daily-week').selectOption('7');
+          await page.locator('#book button[aria-label]').filter({ hasText: '09:00–12:00' }).nth(0).click();
+          await page.locator('#book button[aria-label]').filter({ hasText: '14:00–17:00' }).nth(1).click();
+          await page.locator('select[name="kids"]').selectOption('2');
+          assert.equal(await page.locator('#book').getByText('¥56,000', { exact: true }).count(), 1);
+          const fields = { firstname: 'Test', lastname: 'Parent', email: 'parent@example.invalid', whatsapp: '00000000' };
+          for (const [name, value] of Object.entries(fields)) await page.locator(`input[name="${name}"]`).fill(value);
+          await page.locator('select[name="dial"]').selectOption('+852');
+          for (let child = 0; child < 2; child++) {
+            await page.locator('input[name="kidfirst"]').nth(child).fill('Child' + child);
+            await page.locator('input[name="kidlast"]').nth(child).fill('Test');
+            await page.locator('select[name="kidage"]').nth(child).selectOption('8');
+          }
+          await page.locator('input[name="terms"]').check();
+          await page.locator('#book button[type="submit"]').click();
+          await page.locator('#book button').filter({ hasText: zh ? '返回修改' : 'Go back' }).waitFor({ state: 'visible' });
+          assert.equal(await page.locator('#book').innerText().then(t => t.includes('¥56,000')), true);
+          await page.locator('#book button').filter({ hasText: zh ? '返回修改' : 'Go back' }).click();
+          assert.equal(await page.locator('input[name="firstname"]').inputValue(), 'Test', 'Keep entered details on review back');
+          assert.equal(await page.locator('select[name="kids"]').inputValue(), '2');
+          assert.equal(page.url(), initialUrl);
+          await page.locator('#book button').filter({ hasText: zh ? '4 日整週' : '4-day week' }).click();
+          assert.equal(await page.locator('#daily-week').isVisible(), false);
+          assert.equal(await page.locator('input[name="firstname"]').inputValue(), 'Test', 'Keep details when changing booking type');
           await page.clock.pauseAt(START);
           await tile(0).click();
           assert.equal(await page.locator('#book').getByText('fully booked · 已滿', { exact: true }).count(), 1);

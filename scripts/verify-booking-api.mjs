@@ -29,6 +29,8 @@ const handler=createHoldHandler({stripe,sheet:async p=>{calls.push(['reserve',p]
 let response=await handler({json:async()=>body});let data=await response.json();
 assert.equal(data.totalJpy,28000);assert.equal(calls[0][0],'reserve');assert.equal(calls[2][1].mode,'setup');assert.equal(calls[2][1].metadata.weeks,'D20261123AM');
 assert.equal(calls[2][1].expires_at,Math.floor(now/1000)+1800);
+assert.equal(new URL(calls[2][1].success_url).pathname,'/');
+assert.equal(new URL(calls[2][1].cancel_url).searchParams.get('booking'),'day');
 calls=[];response=await handler({json:async()=>({...body,terms:''})});assert.equal(response.status,400);assert.equal(calls.length,0);
 const blocked=createHoldHandler({stripe,sheet:async()=>{throw Object.assign(new Error('Full'),{code:'full'});},token:'test',siteUrl:'https://example.invalid',now:()=>now});
 response=await blocked({json:async()=>body});assert.equal(response.status,409);assert.equal(calls.length,0);
