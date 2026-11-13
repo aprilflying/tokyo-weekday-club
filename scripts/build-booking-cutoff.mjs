@@ -237,7 +237,9 @@ async function verifyInlineBooking(source, file) {
     c.state.counts = { bookingVersion: 9, sessions: {}, classes: {} };
     c.renderVals().chooseSingleDay();
     let v = c.renderVals();
-    assert.equal(v.dayWeek, '7', 'Start on the first week with bookable days');
+    assert.equal(v.dayWeek, '5', 'Start on the first week with bookable days under the 3-day policy');
+    c.renderVals().changeDayWeek({ target: { value: '7' } });
+    v = c.renderVals();
     assert.equal(v.isSingleDay, true);
     v.dayRows[0].sessions[0].pick();
     c.renderVals().dayRows[0].sessions[1].pick();
@@ -263,7 +265,7 @@ async function verifyInlineBooking(source, file) {
     assert.equal(sent.kidsCount, 2);
     assert.deepEqual(sent.days, [{ date: '2026-11-23', s: 'pm' }, { date: '2026-11-24', s: 'am' }, { date: '2026-11-30', s: 'pm' }]);
     assert.deepEqual(sent.weeks, []);
-    h.clock(Date.parse('2026-11-10T14:00:00+09:00'));
+    h.clock(Date.parse('2026-11-20T00:00:00+09:00'));
     c.state.holding = false;
     await c.renderVals().pay({ preventDefault() {} });
     assert.equal(h.requests.length, 1, 'Expired daily selection never reaches checkout');
