@@ -22,7 +22,7 @@ function bookingRow_(ref){var sh=sheet_();if(sh.getLastRow()<2)return 0;var refs
 function clearHold_(ref){var sh=bookingHolds_();if(sh.getLastRow()<2)return;var rows=sh.getRange(2,1,sh.getLastRow()-1,4).getValues();rows.forEach(function(v,i){if(String(v[0])===String(ref))sh.getRange(i+2,2).setValue(0);});}
 function putHold_(ref,codes,kids){var sh=bookingHolds_(),row=0;var rows=sh.getLastRow()>1?sh.getRange(2,1,sh.getLastRow()-1,4).getValues():[];rows.forEach(function(v,i){if(String(v[0])===String(ref))row=i+2;});var value=[ref,Date.now()+35*60000,codes,kids];if(row)sh.getRange(row,1,1,4).setValues([value]);else sh.appendRow(value);}
 function counts_(fresh,excludeRef){
-  var savedClasses=confirmedClasses_();var out={bookingVersion:9,max:6,min:3,sessions:{},confirmed:{},classes:{},closedWeeks:{}};Object.keys(savedClasses).forEach(function(c){out.classes[c]='confirmed';});
+  var savedClasses=confirmedClasses_();var out={bookingVersion:9,confirmationDays:3,max:6,min:3,sessions:{},confirmed:{},classes:{},closedWeeks:{}};Object.keys(savedClasses).forEach(function(c){out.classes[c]='confirmed';});
   for(var w=1;w<=12;w++)['AM','PM'].forEach(function(s){bookingUnit_('W'+w+s).sessions.forEach(function(c){out.sessions[c]=0;out.confirmed[c]=0;});});
   var sh=sheet_(),active={};
   var rows=sh.getLastRow()>1?sh.getRange(2,1,sh.getLastRow()-1,HEADERS.length).getValues():[];
@@ -83,7 +83,7 @@ function doPost(e){
     if(b.action==='status')return setStatus_(b);return appendBooking_(b);
   }catch(err){return json_({ok:false,error:String(err)});}finally{try{lock.releaseLock();}catch(_){}}
 }
-function doGet(e){if(e&&e.parameter&&e.parameter.counts==='1')return json_(counts_(true));return json_({ok:true,service:'twc-bookings',version:9,bookingVersion:9});}
+function doGet(e){if(e&&e.parameter&&e.parameter.counts==='1')return json_(counts_(true));return json_({ok:true,service:'twc-bookings',version:9,bookingVersion:9,confirmationDays:3});}
 function daysToMonday_(code){try{return Math.round((ymdMs_(bookingUnit_(code).date)-todayMs_())/86400000);}catch(_){return null;}}
 function weekLabel_(code,zh){
   var u;try{u=bookingUnit_(code);}catch(_){return String(code||'');}
@@ -94,8 +94,8 @@ function weekLabel_(code,zh){
 function bookingSubjectWeeks_(d,zh){var codes=String(d.codes||'').split('-').filter(Boolean);return codes.length===1?weekLabel_(codes[0],zh):(zh?codes.length+' 個班別':codes.length+' classes');}
 function holdEmail_(d){
   var zh=d.lang==='zh',codes=String(d.codes).split('-').filter(Boolean),dates=codes.map(function(c){return weekLabel_(c,zh);}).join('; '),yen='¥'+Number(d.amount).toLocaleString('en-US');
-  var body=zh?`<p>${esc_(d.name)} 你好，</p>${childDetailsBlock_(d,true)}<p>已收到你的預約及信用卡設定：<b>${esc_(dates)}</b>。</p><p><b>總額：${yen}</b>，共 ${d.kidsCount} 位小朋友。</p><p>同一日、同一時段須於上課前最少 14 日滿 3 人確認開班後才收費；最多 6 人。整週預約須四日均符合開班條件。已確認班可預約至前一日。已確認班別可隨即扣款，未能開班不收費。</p><p>確認及扣款前可<a href="${cancelLink_(d.ref)}">免費取消</a>。確認後，上課前 14 日或以上可退 50%；少於 14 日或缺席恕不退款。單日按所選日期、整週按第一日計算。</p>${directions_(true)}${bring_(true)}${signoff_(true,d.ref)}`:
-    `<p>Hi ${esc_(d.name)},</p>${childDetailsBlock_(d,false)}<p>We have received your booking and saved card: <b>${esc_(dates)}</b>.</p><p><b>Total: ${yen}</b> for ${d.kidsCount} child(ren).</p><p>Each dated session needs at least 3 children confirmed at least 14 days before class, with a maximum of 6. We charge after confirmation. Weekly bookings require all 4 days to qualify. Confirmed classes accept late bookings until the day before. Confirmed classes may be charged immediately. Classes that do not run are not charged.</p><p><a href="${cancelLink_(d.ref)}">Cancel free before confirmation and charging</a>. After confirmation: 50% refund with 14+ days' notice; less than 14 days and no-shows are non-refundable. Notice is measured from the selected day, or the first day of a weekly booking.</p>${directions_(false)}${bring_(false)}${signoff_(false,d.ref)}`;
+  var body=zh?`<p>${esc_(d.name)} 你好，</p>${childDetailsBlock_(d,true)}<p>已收到你的預約及信用卡設定：<b>${esc_(dates)}</b>。</p><p><b>總額：${yen}</b>，共 ${d.kidsCount} 位小朋友。</p><p>同一日、同一時段須於上課前最少 3 日滿 3 人確認開班後才收費；最多 6 人。整週預約須四日均符合開班條件。已確認班可預約至前一日。已確認班別可隨即扣款，未能開班不收費。</p><p>確認及扣款前可<a href="${cancelLink_(d.ref)}">免費取消</a>。確認後，上課前 14 日或以上可退 50%；少於 14 日或缺席恕不退款。單日按所選日期、整週按第一日計算。</p>${directions_(true)}${bring_(true)}${signoff_(true,d.ref)}`:
+    `<p>Hi ${esc_(d.name)},</p>${childDetailsBlock_(d,false)}<p>We have received your booking and saved card: <b>${esc_(dates)}</b>.</p><p><b>Total: ${yen}</b> for ${d.kidsCount} child(ren).</p><p>Each dated session needs at least 3 children confirmed at least 3 days before class, with a maximum of 6. We charge after confirmation. Weekly bookings require all 4 days to qualify. Confirmed classes accept late bookings until the day before. Confirmed classes may be charged immediately. Classes that do not run are not charged.</p><p><a href="${cancelLink_(d.ref)}">Cancel free before confirmation and charging</a>. After confirmation: 50% refund with 14+ days' notice; less than 14 days and no-shows are non-refundable. Notice is measured from the selected day, or the first day of a weekly booking.</p>${directions_(false)}${bring_(false)}${signoff_(false,d.ref)}`;
   return {subject:zh?'已收到預約 · '+bookingSubjectWeeks_(d,true):'Booking received · '+bookingSubjectWeeks_(d,false),body:body};
 }
 function confirmedEmail_(d,code,charged){var zh=d.lang==='zh',date=weekLabel_(code,zh),t=sessTimes_(code,zh);return {subject:zh?'預約確認 · '+date:'Confirmed · '+date,body:zh?`<p>${esc_(d.name)} 你好，</p>${childDetailsBlock_(d,true)}<p>你所選的 <b>${esc_(date)}</b> 已確認開班。</p><p><b>已收費 ${esc_(charged)}</b>。Stripe 會另外寄出收據。</p><p>${t.doors}，${t.line}。</p>${directions_(true)}${bring_(true)}${signoff_(true,d.ref)}`:`<p>Hi ${esc_(d.name)},</p>${childDetailsBlock_(d,false)}<p>Your booked class, <b>${esc_(date)}</b>, is confirmed.</p><p><b>Charged: ${esc_(charged)}</b>. Your Stripe receipt will arrive separately.</p><p>${t.doors}, ${t.line}.</p>${directions_(false)}${bring_(false)}${signoff_(false,d.ref)}`};}
@@ -105,8 +105,8 @@ function statusEmail_(d,status,note){if(!d.email)return;if(status==='card saved'
 function dailyEmails(){
   var lock=LockService.getScriptLock();if(!lock.tryLock(20000))return;try{
   var classes=reconcileClasses_();
-  // The existing daily trigger now sends reminders only. Charging is governed
-  // by dated session counts in the Stripe webhook, never by a 14-day timer.
+  // The existing daily trigger sends cancellation notices and reminders. Charging is governed
+  // by dated session counts in the Stripe webhook, never by a deadline timer.
   var sh=sheet_();for(var row=2;row<=sh.getLastRow();row++){
     var d=rowData_(sh,row);if(!d.email||!['card saved','paid'].includes(d.status))continue;
     bookingUnits_(d.codes).forEach(function(u){var diff=daysToMonday_(u.code),paid=d.notes.indexOf('paid '+u.code+' ')!==-1;
@@ -120,7 +120,7 @@ function dailyEmails(){
   }
   }finally{lock.releaseLock();}
 }
-function confirmationDeadline_(u){return new Date(u.date+(u.session==='AM'?'T09:00:00+09:00':'T14:00:00+09:00')).getTime()-14*86400000;}
+function confirmationDeadline_(u){return new Date(u.date+'T00:00:00+09:00').getTime()-3*86400000;}
 function confirmedClasses_(){return JSON.parse(PropertiesService.getScriptProperties().getProperty('TWC_CONFIRMED_CLASSES_V9')||'{}');}
 function canBookClass_(u,classes){return Date.now()<new Date(u.date+'T00:00:00+09:00').getTime()&&(Date.now()<confirmationDeadline_(u)||u.sessions.every(function(c){return !!classes[c];}));}
 function reconcileClasses_(){
@@ -141,7 +141,7 @@ function reconcileClasses_(){
   candidates.forEach(function(e){if(Date.now()<confirmationDeadline_(e.unit))e.unit.sessions.forEach(function(c){classes[c]=classes[c]||new Date().toISOString();});});
   PropertiesService.getScriptProperties().setProperty('TWC_CONFIRMED_CLASSES_V9',JSON.stringify(classes));return classes;
 }
-function classNotRunningEmail_(d,u){var zh=d.lang==='zh',date=weekLabel_(u.code,zh);return {subject:zh?'班別未能開辦 · '+date:'Class will not run · '+date,body:zh?`<p>${esc_(d.name)} 你好，</p><p>${esc_(date)} 未能在上課前 14 日達到開班條件，因此不會開辦，亦不會收取該班費用。</p><p>歡迎回覆電郵，讓我們為你安排其他可選班別。</p>${signoff_(true,d.ref)}`:`<p>Hi ${esc_(d.name)},</p><p>${esc_(date)} did not meet the confirmation requirements 14 days before class, so it will not run. You will not be charged for that class.</p><p>Please reply if you would like help choosing another available class.</p>${signoff_(false,d.ref)}`};}
+function classNotRunningEmail_(d,u){var zh=d.lang==='zh',date=weekLabel_(u.code,zh);return {subject:zh?'班別未能開辦 · '+date:'Class will not run · '+date,body:zh?`<p>${esc_(d.name)} 你好，</p><p>${esc_(date)} 未能在上課前 3 日達到開班條件，因此不會開辦，亦不會收取該班費用。</p><p>歡迎回覆電郵，讓我們為你安排其他可選班別。</p>${signoff_(true,d.ref)}`:`<p>Hi ${esc_(d.name)},</p><p>${esc_(date)} did not meet the confirmation requirements 3 days before class, so it will not run. You will not be charged for that class.</p><p>Please reply if you would like help choosing another available class.</p>${signoff_(false,d.ref)}`};}
 
 function checkClassDeadlinesV9(){
   var lock=LockService.getScriptLock();if(!lock.tryLock(20000))return;
@@ -157,6 +157,6 @@ function installDailyBookingV9(){
   var lock=LockService.getScriptLock();lock.waitLock(20000);
   try{bookingHolds_();reconcileClasses_();
     if(!ScriptApp.getProjectTriggers().some(function(t){return t.getHandlerFunction()==='dailyEmails';}))ScriptApp.newTrigger('dailyEmails').timeBased().everyDays(1).atHour(8).inTimezone('Asia/Tokyo').create();
-    console.log('TWC booking v9 ready: correct spreadsheet, daily price 14000, weekly price 48000, 3–6 children, 14-day confirmation. Existing data and triggers preserved. No emails sent by setup.');
+    console.log('TWC booking v9 ready: correct spreadsheet, daily price 14000, weekly price 48000, 3–6 children, 3-day confirmation. Existing data and triggers preserved. No emails sent by setup.');
   }finally{lock.releaseLock();}
 }

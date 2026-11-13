@@ -14,6 +14,10 @@ for(const bad of [
  {...day,days:[{date:'2026-11-23',s:'am'},{date:'2026-11-23',s:'pm'}]},
 ])assert.throws(()=>normaliseBooking(bad,now));
 const unit=parseCode('D20261123AM'),week=parseCode('W8AM');
+assert.equal(confirmationDeadline(unit),Date.parse('2026-11-20T00:00:00+09:00'));
+assert.equal(confirmationDeadline(parseCode('D20261123PM')),confirmationDeadline(unit),'AM and PM share the calendar-day deadline');
+assert.equal(canBook(parseCode('D20261117AM'),{classes:{}},Date.parse('2026-11-13T12:00:00+09:00')),true,'Next-week pending classes accept bookings');
+assert.equal(canBook(parseCode('W8AM'),{classes:{}},Date.parse('2026-11-16T12:00:00+09:00')),true,'Next-week weekly bookings accept bookings');
 assert.equal(canBook(unit,{classes:{}},confirmationDeadline(unit)-1),true);
 assert.equal(canBook(unit,{classes:{}},confirmationDeadline(unit)),false);
 const confirmed={classes:Object.fromEntries(sessionCodes(week).map(c=>[c,'confirmed'])),confirmed:Object.fromEntries(sessionCodes(week).map(c=>[c,3]))};
@@ -50,4 +54,4 @@ await billing.confirm(['D20261126AM']);assert.equal(payments.length,1,'Another d
 await billing.cardSaved(session);await billing.cardSaved(session);assert.equal(items.size,1);assert.equal(payments.length,1);
 await billing.invoicePaid({metadata:{ref:'TESTREF12345',week:'D20261123AM'},amount_paid:28000});assert.match(sheetCalls.at(-1).note,/paid D20261123AM ¥28,000/);
 const rejected=createBilling({stripe:{},sheet:async()=>({activated:false}),counts:async()=>{throw Error('must not run');}});await rejected.cardSaved(session);
-console.log('Booking validation, JPY pricing, 14-day deadline, late top-ups, fail-closed reservations and invoice replay tests passed. No live Stripe calls.');
+console.log('Booking validation, JPY pricing, 3-day deadline, next-week bookings, late top-ups, fail-closed reservations and invoice replay tests passed. No live Stripe calls.');

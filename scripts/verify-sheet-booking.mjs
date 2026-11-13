@@ -34,16 +34,35 @@ assert.equal(ctx.counts_(true).W8AM,3);
 assert.equal(reserve('TAMPER001','D20261123AM',2).amountJpy,28000);
 assert.equal(reserve('TAMPER001','D20261124AM',2).code,'ref_conflict');
 ctx.clearHold_('TAMPER001');
-// Cross the 14-day deadline. Confirmed classes stay open; unconfirmed close.
-now=Date.parse('2026-11-09T09:00:00+09:00');
+// Pending classes for next week are allowed inside the former 14-day window.
+now=Date.parse('2026-11-13T12:00:00+09:00');
+assert.equal(reserve('NEXTWEEK01','D20261117AM').ok,true);
+ctx.clearHold_('NEXTWEEK01');
+now=Date.parse('2026-11-12T12:00:00+09:00');
+assert.equal(reserve('NEXTWEEK02','W7PM').ok,true);
+ctx.clearHold_('NEXTWEEK02');
+assert.equal(ctx.counts_(true).confirmationDays,3);
+// Both AM and PM close at midnight, 3 calendar days before the class.
+now=Date.parse('2026-11-19T23:59:59+09:00');
 assert.equal(reserve('TOOLATE01','D20261123AM').ok,true);
-assert.equal(reserve('TOOLATE02','D20261123PM').ok,true,'PM deadline is 14:00 JST');
-ctx.clearHold_('TOOLATE02');now=Date.parse('2026-11-09T14:00:00+09:00');
+assert.equal(reserve('TOOLATE02','D20261123PM').ok,true);
+ctx.clearHold_('TOOLATE02');now=Date.parse('2026-11-20T00:00:00+09:00');
 assert.equal(reserve('TOOLATE03','D20261123PM').code,'booking_closed');
 now=Date.parse('2026-11-22T23:59:59+09:00');assert.equal(reserve('LATETOPUP1','D20261123AM').ok,true);
 now=Date.parse('2026-11-23T00:00:00+09:00');assert.equal(reserve('SAMEDAY01','D20261123AM').code,'booking_closed');
-// A checkout completing after its deadline cannot create an invoice.
-now=Date.parse('2026-11-10T13:00:00+09:00');reserve('EXPIRED001','D20261124PM');now=Date.parse('2026-11-10T14:00:00+09:00');assert.equal(activate('EXPIRED001','D20261124PM').activated,false);
+// A checkout completing after the cutoff cannot activate or create an invoice.
+now=Date.parse('2026-11-20T23:59:00+09:00');reserve('EXPIRED001','D20261124PM');now=Date.parse('2026-11-21T00:00:00+09:00');assert.equal(activate('EXPIRED001','D20261124PM').activated,false);
+// The daily schedule cancels an underfilled class exactly once and releases its seats.
+now=Date.parse('2026-11-20T12:00:00+09:00');
+reserve('UNDERFILL1','D20261124PM');activate('UNDERFILL1','D20261124PM');
+sheet().getRange(ctx.bookingRow_('UNDERFILL1'),15).setValue('card saved');
+ctx.dailyEmails();assert.equal(messages.filter(m=>m.ref==='UNDERFILL1').length,0);
+now=Date.parse('2026-11-21T08:00:00+09:00');ctx.dailyEmails();ctx.dailyEmails();
+const cancellations=messages.filter(m=>m.ref==='UNDERFILL1');
+assert.equal(cancellations.length,1);
+assert.match(cancellations[0].body,/3 days before class/);
+assert.equal(ctx.counts_(true).sessions.D20261124PM,0);
+assert.equal(read(ctx.chargeableBooking_({ref:'UNDERFILL1',code:'D20261124PM'})).chargeable,false);
 assert.equal(ctx.holdEmail_({name:'Test',kids:'Test',kidsCount:1,codes:'D20261123AM',amount:14000,ref:'TESTREF',lang:'en'}).body.includes('¥14,000'),true);
-assert.match(ctx.holdEmail_({name:'Test',kids:'Test',kidsCount:1,codes:'D20261123AM',amount:14000,ref:'TESTREF',lang:'zh'}).body,/14 日/);
-console.log('Sheet reservation, daily/weekly shared capacity, 14-day class confirmation, late top-ups, deadline expiry and bilingual email tests passed. All services are mocked.');
+assert.match(ctx.holdEmail_({name:'Test',kids:'Test',kidsCount:1,codes:'D20261123AM',amount:14000,ref:'TESTREF',lang:'zh'}).body,/最少 3 日/);
+console.log('Sheet reservation, shared capacity, next-week bookings, 3-day confirmation, daily cancellation, late top-ups and bilingual email tests passed. All services are mocked.');

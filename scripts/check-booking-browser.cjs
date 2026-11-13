@@ -22,7 +22,7 @@ async function waitForProduction() {
     try {
       const r = await fetch('https://www.tokyoweekdayclub.com/?booking-release=' + Date.now(), { signal: AbortSignal.timeout(15000) });
       const html = await r.text();
-      if (r.ok && html.includes(MARKER) && html.includes('startInlineBooking')) return;
+      if (r.ok && html.includes(MARKER) && html.includes('/assets/landing.js') && html.includes('3 days ahead')) return;
     } catch {}
     await new Promise(r => setTimeout(r, 10000));
   }
@@ -73,7 +73,7 @@ async function isolateNetwork(page, origins, holdRequests) {
           // Keep timers running while React mounts; freeze only after rendering.
           await page.clock.install({ time: new Date(START.getTime() - 60000) });
           await isolateNetwork(page, [base, local], holdRequests);
-          const response = await page.goto(base + pagePath, { waitUntil: 'domcontentloaded', timeout: 45000 });
+          const response = await page.goto(base + pagePath + '#book', { waitUntil: 'domcontentloaded', timeout: 45000 });
           assert.equal(response.status(), 200);
           await page.waitForFunction(() => window.__dcRegistry && Object.values(window.__dcRegistry).some(r => r.Logic));
           assert.equal(await page.locator('.sc-logic-error').count(), 0, 'No template runtime error');
@@ -85,6 +85,11 @@ async function isolateNetwork(page, origins, holdRequests) {
           await tile(1).waitFor({ state: 'visible' });
           await page.getByText('¥48,000', { exact: true }).first().waitFor({ state: 'visible' });
           await page.waitForFunction(() => document.querySelector('#book').textContent.includes('fully booked'));
+          await page.clock.runFor(700);
+          assert.equal(new URL(page.url()).hash, '', 'Previously shared booking anchors are removed on entry');
+          assert.equal(await page.evaluate(() => window.scrollY), 0, 'Opening the site lands at the top');
+          await page.locator('#top a[href="#book"]').click();
+          await page.waitForFunction(() => window.scrollY > 1000);
           // Daily and weekly modes use one form without navigating away.
           const initialUrl = page.url();
           await page.locator('#book button').filter({ hasText: 'Single Day' }).click();
@@ -146,6 +151,14 @@ async function isolateNetwork(page, origins, holdRequests) {
           console.log(`${live ? 'PRODUCTION' : 'BUILT HTML'} ${engine} ${pagePath}: render, prices, language, capacity, 2-week history and timer rollover passed`);
           await page.close();
         }
+        const dailyLanding = await browser.newPage();
+        await isolateNetwork(dailyLanding, [base, local], []);
+        await dailyLanding.goto(base + (live ? '/daily?lang=zh' : '/daily.html?lang=zh'), { waitUntil: 'domcontentloaded' });
+        await dailyLanding.locator('#daily-week').waitFor({ state: 'visible' });
+        assert.equal(new URL(dailyLanding.url()).pathname, '/hk');
+        assert.equal(new URL(dailyLanding.url()).hash, '');
+        assert.equal(await dailyLanding.evaluate(() => window.scrollY), 0, 'Legacy daily links land at the introduction');
+        await dailyLanding.close();
         if (!live) {
           const page = await browser.newPage();
           page.setDefaultTimeout(15000);

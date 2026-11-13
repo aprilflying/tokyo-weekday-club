@@ -5,9 +5,9 @@ export const INLINE_BOOKING_METHODS = String.raw`
     this._refreshAvailability = () => this.refreshBookingAvailability();
     window.addEventListener('focus', this._refreshAvailability);
     this.refreshBookingAvailability();
-    // The exported site mounts after the browser's initial fragment jump.
-    // Position direct booking links once the form has been rendered.
-    if (window.location.hash === '#book') this._bookingAnchorTimer = setTimeout(() => {
+    // Only a checkout return needs to open the booking status/form automatically.
+    const query = new URLSearchParams(window.location.search);
+    if (window.location.hash === '#book' && (query.has('held') || query.has('resume'))) this._bookingAnchorTimer = setTimeout(() => {
       const book = document.getElementById('book');
       if (book) window.scrollTo({ top: book.getBoundingClientRect().top + window.pageYOffset - 80, behavior: 'auto' });
     }, 400);
@@ -35,7 +35,7 @@ export const INLINE_BOOKING_METHODS = String.raw`
     const code = 'D' + date.replace(/-/g, '') + session.toUpperCase();
     const ready = counts && counts.bookingVersion === 9 && counts.sessions;
     const confirmed = counts?.classes?.[code] === 'confirmed';
-    const deadline = Date.parse(date + (session === 'am' ? 'T09:00:00+09:00' : 'T14:00:00+09:00')) - 14 * 86400000;
+    const deadline = Date.parse(date + 'T00:00:00+09:00') - 3 * 86400000;
     const closed = Date.now() >= Date.parse(date + 'T00:00:00+09:00') || (Date.now() >= deadline && !confirmed);
     const room = 6 - Number(counts?.sessions?.[code] || 0);
     return { ready: !!ready, confirmed, closed, room, available: !!ready && !closed && room >= (this.state.kids ?? 1) };
@@ -107,7 +107,7 @@ export const INLINE_BOOKING_METHODS = String.raw`
       formTotal: total,
       formBreakdown: single ? text(choices.length + ' day(s) × ' + kids + ' child(ren) × ¥14,000', choices.length + ' 日 × ' + kids + ' 位 × ¥14,000') : text(Object.keys(this.state.sels || {}).length + ' week(s) × ' + kids + ' child(ren) × ¥48,000', Object.keys(this.state.sels || {}).length + ' 週 × ' + kids + ' 位 × ¥48,000'),
       weekSaving: single && Object.values(groups).some(n => n === 4),
-      reviewPolicy: single ? text('Each selected session is charged only after confirmation with at least 3 children, at least 14 days ahead. Confirmed classes may be charged immediately. No charge for classes that do not run.', '所選每節須於上課前最少 14 日滿 3 人確認開班後才收費。已確認班可隨即扣款；未能開班不收費。') : text('A weekly booking is charged only after all four days are confirmed with at least 3 children, at least 14 days ahead. Confirmed classes may be charged immediately. No charge for classes that do not run.', '整週須四日均於上課前最少 14 日滿 3 人確認後才收費。已確認班可隨即扣款；未能開班不收費。')
+      reviewPolicy: single ? text('Each selected session is charged only after confirmation with at least 3 children, at least 3 days ahead. Confirmed classes may be charged immediately. No charge for classes that do not run.', '所選每節須於上課前最少 3 日滿 3 人確認開班後才收費。已確認班可隨即扣款；未能開班不收費。') : text('A weekly booking is charged only after all four days are confirmed with at least 3 children, at least 3 days ahead. Confirmed classes may be charged immediately. No charge for classes that do not run.', '整週須四日均於上課前最少 3 日滿 3 人確認後才收費。已確認班可隨即扣款；未能開班不收費。')
     });
     if (single) {
       v.selDays = choices.length ? choices.length + (choices.length === 1 ? ' day' : ' days') : 'a day';
