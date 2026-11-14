@@ -15,3 +15,11 @@ The user supplied both replacement images directly and specified their venue map
 - `musashi-koyama-classroom.png`: supplied original classroom image for Musashi-Koyama.
 
 These replace the previous gallery images on both language versions. Captions identify each venue; the section does not describe the supplied images as documentary photographs.
+
+## Kaminoge close-up — 14 November 2026
+
+At the user's request, `kaminoge-exterior-closeup.jpg` replaces the Kaminoge gallery image in both languages. The original supplied PNG is retained. Edited with the built-in image generation tool, then converted to a web-sized JPEG. The English chalkboard text is removed and the composition is cropped closer to the entrance.
+
+Final edit prompt:
+
+> Use case: precise-object-edit. Edit target: the supplied Kaminoge building exterior image. Two changes only: (1) remove the chalk words “Let's Learn English!” from the dark chalkboard visible inside on the right. Leave a naturally blank dark chalkboard with its existing frame and subtle chalk surface texture; retain the small smiley at the bottom. (2) Crop/zoom in modestly, around 15–20%, centred on the ground-floor entrance and inviting classroom, reducing the amount of upper-storey roof/balcony and foreground lawn to simplify the visual. Keep the front entrance, the main steps and the Makkam Language & Cafe wall lettering clearly visible. Preserve the original architecture, furnishings, plants, warm lighting, palette and viewpoint. No new objects, text, decoration or people. Output a high-quality 4:3 landscape image intended for the website venue card.
