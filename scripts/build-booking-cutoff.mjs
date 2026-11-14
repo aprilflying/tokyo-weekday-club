@@ -249,7 +249,7 @@ async function verifyInlineBooking(source, file) {
     c.renderVals().changeDayWeek({ target: { value: '8' } });
     c.renderVals().dayRows[0].sessions[1].pick();
     c.state.kids = 2; c.state.termsOk = true;
-    assert.equal(c.renderVals().formTotal, '¥84,000', 'Three dates across two weeks for two children');
+    assert.equal(c.renderVals().formTotal, '¥75,600', 'Three dates across two weeks with 10% family discount');
     c.state.counts.sessions.D20261123PM = 5;
     assert.equal(c.renderVals().submitDisabled, true, 'Capacity uses number of children');
     c.state.counts.sessions.D20261123PM = 0;
@@ -274,7 +274,13 @@ async function verifyInlineBooking(source, file) {
     assert.equal(c.renderVals().isWeekly, true);
     assert.equal(c.dailyChoices().length, 0);
     c.state.sels = { 8: 'am' };
-    assert.equal(c.renderVals().formTotal, '¥96,000', 'Weekly price remains 48000 per child');
+    assert.equal(c.renderVals().formTotal, '¥86,400', 'Weekly family total includes 10% discount');
+    assert.match(c.renderVals().payLabel,/86,400/);
+    assert.match(c.renderVals().bkRows.find(r=>r.k===(c.renderVals().zh?'費用':'total')).v,/86,400/);
+    c.state.kids=3;
+    assert.equal(c.renderVals().formTotal,'¥115,200');
+    assert.match(c.renderVals().payLabel,/115,200/);
+    assert.match(c.renderVals().formBreakdown,/20%/);
   }
   console.log(`${file}: bilingual inline modes, cross-week days, totals, capacity, checkout payload and expiry passed`);
 }

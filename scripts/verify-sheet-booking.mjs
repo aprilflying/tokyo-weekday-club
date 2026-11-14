@@ -16,9 +16,9 @@ const ctx=vm.createContext({console,Date:Clock,JSON,Number,String,Math,Set,Error
 const constants=`const SHARED_TOKEN='test';const HEADERS=Array(17);const COL={ref:2,name:3,email:4,kids:6,kidsCount:7,weeks:8,codes:9,amount:12,lang:13,status:15,notes:16};const WEEK_MONDAYS=Array.from({length:12},(_,i)=>new Date(Date.parse('2026-10-05')+i*7*86400000).toISOString().slice(0,10));const DAYS=WEEK_MONDAYS;function zhDay_(d){return d;}`;
 new vm.Script(constants+fs.readFileSync('operations/daily-booking.gs','utf8')).runInContext(ctx);
 const read=r=>JSON.parse(r.getContent());
-function reserve(ref,codes,kids=1){return read(ctx.reserveBooking_({ref,weekCodes:codes,kidsCount:kids,name:'Test',email:ref+'@example.invalid',kids:'Test Child',terms:'yes',amountJpy:1,lang:'en'}));}
+function reserve(ref,codes,kids=1,pricingVersion='family-v2'){return read(ctx.reserveBooking_({ref,weekCodes:codes,kidsCount:kids,pricingVersion,name:'Test',email:ref+'@example.invalid',kids:'Test Child',terms:'yes',amountJpy:1,lang:'en'}));}
 function activate(ref,codes,kids=1){return read(ctx.activateBooking_({ref,weekCodes:codes,kidsCount:kids}));}
-assert.equal(reserve('WEEKTEST01','W8AM',2).amountJpy,96000);
+assert.equal(reserve('WEEKTEST01','W8AM',2).amountJpy,86400);
 assert.equal(activate('WEEKTEST01','W8AM',2).activated,true);
 assert.equal(reserve('DAYTEST001','D20261123AM').amountJpy,14000);
 activate('DAYTEST001','D20261123AM');
@@ -31,7 +31,7 @@ assert.equal(ctx.counts_(true).classes.D20261123AM,'confirmed');
 assert.equal(read(ctx.chargeableBooking_({ref:'WEEKTEST01',code:'W8AM'})).chargeable,true);
 assert.equal(ctx.counts_(true).sessions.D20261123AM,3);
 assert.equal(ctx.counts_(true).W8AM,3);
-assert.equal(reserve('TAMPER001','D20261123AM',2).amountJpy,28000);
+assert.equal(reserve('TAMPER001','D20261123AM',2).amountJpy,25200);
 assert.equal(reserve('TAMPER001','D20261124AM',2).code,'ref_conflict');
 ctx.clearHold_('TAMPER001');
 // Pending classes for next week are allowed inside the former 14-day window.
@@ -81,10 +81,23 @@ assert.equal(reserve('MIXVENUE1','KD20270223AM-D20270224AM').ok,false);
 assert.equal(reserve('KAMWEEK21','KW21PM',1).amountJpy,48000);
 for(const code of ['W22AM','KD20270301AM','KD20270226AM'])assert.throws(()=>ctx.bookingUnit_(code));
 assert.match(ctx.bookingDirections_({codes:'KD20270222AM'},false),/1-28-3 Kaminoge/);
-assert.match(ctx.bookingDirections_({codes:'D20270222AM'},true),/Aliquot Turm 301/);
+assert.match(ctx.bookingDirections_({codes:'D20270222AM'},true),/Aliquot Turm 501/);
 assert.match(ctx.weekLabel_('KW21AM',true),/上野毛.*2月22日.*2月25日/);
 console.log('Two venues have separate capacity, confirmation and directions; February dates are valid.');
 
 ctx.statusEmail_({email:'parent@example.invalid',ref:'KAMFEB001',codes:'KD20270222AM',kidsCount:2,lang:'en'},'paid','paid KD20270222AM ¥28,000');
 assert.match(messages.at(-1).body,/Kaminoge/);
 assert.match(messages.at(-1).body,/¥28,000/);
+
+for(const [kids,expected] of [[1,14000],[2,25200],[3,33600],[4,44800],[6,67200]]) {
+ const ref='PRICETEST'+kids;
+ assert.equal(reserve(ref,'D20270223PM',kids).amountJpy,expected);
+ ctx.clearHold_(ref);
+}
+assert.equal(reserve('LEGACYTEST','D20270224PM',2,'daily-v1-min3').amountJpy,28000);
+assert.equal(reserve('LEGACYTEST','D20270224PM',2).code,'ref_conflict','Do not rewrite the price on an existing reservation');
+const familyEmail={name:'Test',kids:'Test',kidsCount:2,codes:'D20270223PM',amount:25200,ref:'PRICEEMAIL',lang:'en'};
+assert.match(ctx.holdEmail_(familyEmail).body,/10% family discount/);
+assert.match(ctx.holdEmail_({...familyEmail,lang:'zh'}).body,/減 10%/);
+assert.equal(ctx.holdEmail_({...familyEmail,amount:28000}).body.includes('family discount'),false);
+console.log('Sheet independently calculates family discounts and preserves existing reservation prices.');

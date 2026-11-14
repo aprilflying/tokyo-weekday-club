@@ -103,7 +103,7 @@ async function isolateNetwork(page, origins, holdRequests) {
           await page.locator('#book button[aria-label]').filter({hasText:'09:00–12:00'}).nth(0).click();
           await page.locator('#book button[aria-label]').filter({hasText:'14:00–17:00'}).nth(1).click();
           await page.locator('select[name="kids"]').selectOption('2');
-          assert.equal(await page.locator('#book').getByText('¥56,000', { exact: true }).count(), 1);
+          assert.equal(await page.locator('#book').getByText('¥50,400', { exact: true }).count(), 1);
           const fields = { firstname: 'Test', lastname: 'Parent', email: 'parent@example.invalid', whatsapp: '00000000' };
           for (const [name, value] of Object.entries(fields)) await page.locator(`input[name="${name}"]`).fill(value);
           await page.locator('select[name="dial"]').selectOption('+852');
@@ -115,7 +115,7 @@ async function isolateNetwork(page, origins, holdRequests) {
           await page.locator('input[name="terms"]').check();
           await page.locator('#book button[type="submit"]').click();
           await page.locator('#book button').filter({ hasText: zh ? '返回修改' : 'Go back' }).waitFor({ state: 'visible' });
-          assert.equal(await page.locator('#book').innerText().then(t => t.includes('¥56,000')), true);
+          assert.equal(await page.locator('#book').innerText().then(t => t.includes('¥50,400')), true);
           await page.locator('#book button').filter({ hasText: zh ? '返回修改' : 'Go back' }).click();
           assert.equal(await page.locator('input[name="firstname"]').inputValue(), 'Test', 'Keep entered details on review back');
           assert.equal(await page.locator('select[name="kids"]').inputValue(), '2');
