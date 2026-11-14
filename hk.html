@@ -340,7 +340,6 @@ summary::-webkit-details-marker{display:none}
     <sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><h2 style="font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-weight:900;font-size:clamp(30px,4vw,42px);letter-spacing:-0.01em;margin:0 0 36px">By the day or week</h2></sc-if>
     <sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><h2 style="font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-weight:900;font-size:clamp(28px,3.6vw,38px);margin:0 0 36px">收費一目了然</h2></sc-if>
     <div style="position:relative;background:#FAF7F2;border:1px solid #0F0F12;border-radius:22px;overflow:hidden">
-      <p style="font-size:14px;line-height:1.6;margin:0;padding:20px 32px"><sc-if value="{{ en }}">Family offer: 2 children save 10%; 3 or more save 20% on the full booking total. Applies to single days and whole weeks booked together.</sc-if><sc-if value="{{ zh }}">家庭優惠：同時報名 2 位小朋友減 10%，3 位或以上減 20%。優惠適用於單日及整週預約總額。</sc-if></p>
       <div style="display:grid;grid-template-columns:1fr auto;gap:8px;padding:24px 32px;background:#F8DDD8;border-bottom:1px dashed rgba(15,15,18,.15)"><div><sc-if value="{{ en }}"><strong>Single day</strong><div style="font-size:13.5px">One morning or afternoon · 3 hours</div><a href="#book" onClick="{{ chooseSingleDay }}" style="color:#C0392B">Choose your days →</a></sc-if><sc-if value="{{ zh }}"><strong>單日報名</strong><div style="font-size:13.5px">自選一個上午或下午 · 3小時</div><a href="#book" onClick="{{ chooseSingleDay }}" style="color:#C0392B">選擇上課日期 →</a></sc-if></div><div style="font-weight:600;font-size:22px;text-align:right">¥14,000<div style="font-size:12px;font-weight:400"><sc-if value="{{ en }}">per child / day</sc-if><sc-if value="{{ zh }}">每位／每日</sc-if></div></div></div>
       <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:baseline;padding:24px 32px;border-bottom:1px dashed rgba(15,15,18,.15)">
         <div><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><strong style="font-size:17px">1 week</strong><div style="font-size:13.5px;color:rgba(15,15,18,.55);margin-top:2px">4 mornings or afternoons · 3 hours a day</div></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><strong style="font-size:17px">1星期</strong><div style="font-size:13.5px;color:rgba(15,15,18,.55);margin-top:2px">4個上午或下午，每日3小時</div></sc-if></div>
@@ -356,8 +355,11 @@ summary::-webkit-details-marker{display:none}
       </div>
       <div style="position:absolute;bottom:80px;right:-6px;font-family:'Caveat','Huninn','Zen Maru Gothic',cursive;font-size:21px;color:#C0392B;transform:rotate(-5deg);padding-right:18px"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"></sc-if></div>
     </div>
-    <div style="margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:rgba(15,15,18,.6)"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>3–6 kids per class · all materials included</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>每班3–6人 · 已包所有教材</span></sc-if></div>
-    <div style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:rgba(15,15,18,.6)">{{ hkdNote }}</div>
+    <ul style="margin:20px 0 0;padding-left:20px;font-size:14px;line-height:1.65;color:rgba(15,15,18,.7);display:grid;gap:8px">
+      <li><sc-if value="{{ en }}">3–6 kids per class · all materials included.</sc-if><sc-if value="{{ zh }}">每班 3–6 人 · 已包所有教材。</sc-if></li>
+      <li><sc-if value="{{ en }}">Family offer: 2 kids save 10%; 3+ save 20% on the full total for days or weeks booked together.</sc-if><sc-if value="{{ zh }}">家庭優惠：同時報名 2 位減 10%，3 位或以上減 20%；適用於單日及整週預約總額。</sc-if></li>
+      <li><sc-if value="{{ en }}">Classes confirmed at least 3 days ahead. Pay in yen after confirmation; confirmed classes may be charged immediately.</sc-if><sc-if value="{{ zh }}">最遲上課前 3 日確認開班，確認後以日圓收費；已確認班可隨即扣款。</sc-if></li>
+    </ul>
   </div>
 </section>
 
