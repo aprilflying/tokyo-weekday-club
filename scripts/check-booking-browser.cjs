@@ -52,8 +52,8 @@ async function isolateNetwork(page, origins, holdRequests) {
     if (pathname === '/_broken-control') { res.setHeader('Content-Type', 'text/html'); return res.end(brokenHtml); }
     const filename = pathname === '/' ? 'index.html' : pathname === '/hk' ? 'hk.html' : pathname.slice(1);
     const target = path.resolve(root, filename);
-    if (!target.startsWith(root + path.sep) || !/\.(html|js|png|jpg|ico)$/.test(filename) || !fs.existsSync(target)) { res.statusCode = 404; return res.end(); }
-    res.setHeader('Content-Type', filename.endsWith('.js') ? 'text/javascript' : filename.endsWith('.html') ? 'text/html' : 'application/octet-stream');
+    if (!target.startsWith(root + path.sep) || !/\.(html|js|css|png|jpg|ico)$/.test(filename) || !fs.existsSync(target)) { res.statusCode = 404; return res.end(); }
+    res.setHeader('Content-Type', filename.endsWith('.js') ? 'text/javascript' : filename.endsWith('.css') ? 'text/css' : filename.endsWith('.html') ? 'text/html' : 'application/octet-stream');
     res.end(fs.readFileSync(target));
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -77,6 +77,7 @@ async function isolateNetwork(page, origins, holdRequests) {
           assert.equal(response.status(), 200);
           await page.waitForFunction(() => window.__dcRegistry && Object.values(window.__dcRegistry).some(r => r.Logic));
           assert.equal(await page.locator('.sc-logic-error').count(), 0, 'No template runtime error');
+          assert.equal(await page.locator('#top .twc-sunbox').count(), 1, 'The circles remain inside the hero alongside the headline and buttons');
           assert.equal(await page.evaluate(marker => document.querySelector('script[data-dc-script]').textContent.includes(marker), MARKER), true);
           const zh = pagePath === '/hk';
           const label = i => zh ? ['10月5–8日', '10月12–15日', '10月19–22日'][i] : ['Oct 5–8', 'Oct 12–15', 'Oct 19–22'][i];
