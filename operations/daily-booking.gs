@@ -2,17 +2,18 @@
  * in each actual dated session before charging. Applied to the existing
  * Apps Script without changing credentials, destinations, or triggers. */
 function bookingUnit_(code) {
-  var m=/^W([1-9]|1[0-2])(AM|PM)$/.exec(code), dates=[], type, session;
-  if(m){type='week';session=m[2];var first=ymdMs_(WEEK_MONDAYS[Number(m[1])-1]);for(var d=0;d<4;d++)dates.push(Utilities.formatDate(new Date(first+d*86400000),'UTC','yyyy-MM-dd'));}
+  var prefix=String(code).charAt(0)==='K'?'K':'', raw=prefix?code.slice(1):code;
+  var m=/^W([1-9]|1[0-9]|2[01])(AM|PM)$/.exec(raw), dates=[], type, session;
+  if(m){type='week';session=m[2];var first=ymdMs_(bookingMondays_()[Number(m[1])-1]);for(var d=0;d<4;d++)dates.push(Utilities.formatDate(new Date(first+d*86400000),'UTC','yyyy-MM-dd'));}
   else {
-    m=/^D(2026)(\d{2})(\d{2})(AM|PM)$/.exec(code);
+    m=/^D(2026|2027)(\d{2})(\d{2})(AM|PM)$/.exec(raw);
     if(!m)throw new Error('Invalid class code');
-    var date=m[1]+'-'+m[2]+'-'+m[3], offset=(ymdMs_(date)-ymdMs_(WEEK_MONDAYS[0]))/86400000;
-    if(!Number.isInteger(offset)||offset<0||offset>=84||offset%7>3||Utilities.formatDate(new Date(ymdMs_(date)),'UTC','yyyy-MM-dd')!==date)throw new Error('Invalid date');
+    var date=m[1]+'-'+m[2]+'-'+m[3], offset=(ymdMs_(date)-ymdMs_(bookingMondays_()[0]))/86400000;
+    if(!Number.isInteger(offset)||offset<0||offset>=147||offset%7>3||Utilities.formatDate(new Date(ymdMs_(date)),'UTC','yyyy-MM-dd')!==date)throw new Error('Invalid date');
     dates=[date];type='day';session=m[4];
   }
-  return {code:code,type:type,dates:dates,date:dates[0],session:session,price:type==='day'?14000:48000,
-    sessions:dates.map(function(d){return 'D'+d.replace(/-/g,'')+session;})};
+  return {code:code,venue:prefix?'kaminoge':'musashi-koyama',type:type,dates:dates,date:dates[0],session:session,price:type==='day'?14000:48000,
+    sessions:dates.map(function(d){return prefix+'D'+d.replace(/-/g,'')+session;})};
 }
 function bookingUnits_(codes){return String(codes||'').split('-').filter(Boolean).map(bookingUnit_);}
 function bookingOpen_(u){return Date.now()<new Date(u.date+'T00:00:00+09:00').getTime()+(u.type==='week'?86400000:0);}
@@ -22,8 +23,8 @@ function bookingRow_(ref){var sh=sheet_();if(sh.getLastRow()<2)return 0;var refs
 function clearHold_(ref){var sh=bookingHolds_();if(sh.getLastRow()<2)return;var rows=sh.getRange(2,1,sh.getLastRow()-1,4).getValues();rows.forEach(function(v,i){if(String(v[0])===String(ref))sh.getRange(i+2,2).setValue(0);});}
 function putHold_(ref,codes,kids){var sh=bookingHolds_(),row=0;var rows=sh.getLastRow()>1?sh.getRange(2,1,sh.getLastRow()-1,4).getValues():[];rows.forEach(function(v,i){if(String(v[0])===String(ref))row=i+2;});var value=[ref,Date.now()+35*60000,codes,kids];if(row)sh.getRange(row,1,1,4).setValues([value]);else sh.appendRow(value);}
 function counts_(fresh,excludeRef){
-  var savedClasses=confirmedClasses_();var out={bookingVersion:9,confirmationDays:3,max:6,min:3,sessions:{},confirmed:{},classes:{},closedWeeks:{}};Object.keys(savedClasses).forEach(function(c){out.classes[c]='confirmed';});
-  for(var w=1;w<=12;w++)['AM','PM'].forEach(function(s){bookingUnit_('W'+w+s).sessions.forEach(function(c){out.sessions[c]=0;out.confirmed[c]=0;});});
+  var savedClasses=confirmedClasses_();var out={bookingVersion:9,confirmationDays:3,calendarEnd:'2027-02-25',venues:['musashi-koyama','kaminoge'],max:6,min:3,sessions:{},confirmed:{},classes:{},closedWeeks:{}};Object.keys(savedClasses).forEach(function(c){out.classes[c]='confirmed';});
+  for(var w=1;w<=21;w++)['AM','PM','KAM','KPM'].forEach(function(s){bookingUnit_((s.charAt(0)==='K'?'K':'')+'W'+w+s.slice(-2)).sessions.forEach(function(c){out.sessions[c]=0;out.confirmed[c]=0;});});
   var sh=sheet_(),active={};
   var rows=sh.getLastRow()>1?sh.getRange(2,1,sh.getLastRow()-1,HEADERS.length).getValues():[];
   rows.forEach(function(v){
@@ -37,13 +38,13 @@ function counts_(fresh,excludeRef){
     if(String(v[0])===excludeRef||active[String(v[0])]||Number(v[1])<=Date.now())return;
     bookingUnits_(v[2]).forEach(function(u){u.sessions.forEach(function(c){out.sessions[c]+=Number(v[3])||1;});});
   });
-  for(var i=1;i<=12;i++)['AM','PM'].forEach(function(s){var code='W'+i+s,u=bookingUnit_(code);out.closedWeeks[code]=!canBookClass_(u,savedClasses);out[code]=out.closedWeeks[code]?6:Math.max.apply(null,u.sessions.map(function(c){return out.sessions[c];}));});
+  for(var i=1;i<=21;i++)['AM','PM','KAM','KPM'].forEach(function(s){var code=(s.charAt(0)==='K'?'K':'')+'W'+i+s.slice(-2),u=bookingUnit_(code);out.closedWeeks[code]=!canBookClass_(u,savedClasses);out[code]=out.closedWeeks[code]?6:Math.max.apply(null,u.sessions.map(function(c){return out.sessions[c];}));});
   return out;
 }
 function reserveBooking_(b){
   var kids=Number(b.kidsCount),units=bookingUnits_(b.weekCodes),ref=String(b.ref||'');
   if(!/^[A-Za-z0-9_-]{8,200}$/.test(ref)||!Number.isInteger(kids)||kids<1||kids>6||!units.length||units.length>20||b.terms!=='yes')return json_({ok:false,error:'Invalid booking'});
-  if(units.some(function(u){return u.type!==units[0].type;})||new Set(units.map(function(u){return u.date;})).size!==units.length)return json_({ok:false,error:'Duplicate or mixed dates'});
+  if(units.some(function(u){return u.type!==units[0].type||u.venue!==units[0].venue;})||new Set(units.map(function(u){return u.date;})).size!==units.length)return json_({ok:false,error:'Duplicate or mixed dates'});
   if(units.some(function(u){return !canBookClass_(u,confirmedClasses_());}))return json_({ok:false,code:'booking_closed',error:'A selected date has closed.'});
   var row=bookingRow_(ref),sh=sheet_();
   if(row){var old=rowData_(sh,row);if(old.status==='cancelled')return json_({ok:false,code:'cancelled',error:'This booking was cancelled.'});
@@ -87,21 +88,21 @@ function doGet(e){if(e&&e.parameter&&e.parameter.counts==='1')return json_(count
 function daysToMonday_(code){try{return Math.round((ymdMs_(bookingUnit_(code).date)-todayMs_())/86400000);}catch(_){return null;}}
 function weekLabel_(code,zh){
   var u;try{u=bookingUnit_(code);}catch(_){return String(code||'');}
-  var date=u.type==='week'?DAYS[Number(/^W(\d+)/.exec(code)[1])-1]:Utilities.formatDate(new Date(ymdMs_(u.date)),'UTC','MMM d');
-  var display=zh?(u.type==='week'?zhDay_(date):Number(u.date.slice(5,7))+'月'+Number(u.date.slice(8))+'日'):date;
-  return display+' · '+(u.session==='AM'?'09:00–12:00':'14:00–17:00')+(zh?'（東京時間）':' (Tokyo time)');
+  function fmt(date){return zh?Number(date.slice(5,7))+'月'+Number(date.slice(8))+'日':Utilities.formatDate(new Date(ymdMs_(date)),'UTC','MMM d');}
+  var display=fmt(u.date)+(u.type==='week'?' – '+fmt(u.dates[3]):'');
+  return bookingVenueName_(u.venue,zh)+' · '+display+' · '+(u.session==='AM'?'09:00–12:00':'14:00–17:00')+(zh?'（東京時間）':' (Tokyo time)');
 }
 function bookingSubjectWeeks_(d,zh){var codes=String(d.codes||'').split('-').filter(Boolean);return codes.length===1?weekLabel_(codes[0],zh):(zh?codes.length+' 個班別':codes.length+' classes');}
 function holdEmail_(d){
   var zh=d.lang==='zh',codes=String(d.codes).split('-').filter(Boolean),dates=codes.map(function(c){return weekLabel_(c,zh);}).join('; '),yen='¥'+Number(d.amount).toLocaleString('en-US');
-  var body=zh?`<p>${esc_(d.name)} 你好，</p>${childDetailsBlock_(d,true)}<p>已收到你的預約及信用卡設定：<b>${esc_(dates)}</b>。</p><p><b>總額：${yen}</b>，共 ${d.kidsCount} 位小朋友。</p><p>同一日、同一時段須於上課前最少 3 日滿 3 人確認開班後才收費；最多 6 人。整週預約須四日均符合開班條件。已確認班可預約至前一日。已確認班別可隨即扣款，未能開班不收費。</p><p>確認及扣款前可<a href="${cancelLink_(d.ref)}">免費取消</a>。確認後，上課前 14 日或以上可退 50%；少於 14 日或缺席恕不退款。單日按所選日期、整週按第一日計算。</p>${directions_(true)}${bring_(true)}${signoff_(true,d.ref)}`:
-    `<p>Hi ${esc_(d.name)},</p>${childDetailsBlock_(d,false)}<p>We have received your booking and saved card: <b>${esc_(dates)}</b>.</p><p><b>Total: ${yen}</b> for ${d.kidsCount} child(ren).</p><p>Each dated session needs at least 3 children confirmed at least 3 days before class, with a maximum of 6. We charge after confirmation. Weekly bookings require all 4 days to qualify. Confirmed classes accept late bookings until the day before. Confirmed classes may be charged immediately. Classes that do not run are not charged.</p><p><a href="${cancelLink_(d.ref)}">Cancel free before confirmation and charging</a>. After confirmation: 50% refund with 14+ days' notice; less than 14 days and no-shows are non-refundable. Notice is measured from the selected day, or the first day of a weekly booking.</p>${directions_(false)}${bring_(false)}${signoff_(false,d.ref)}`;
+  var body=zh?`<p>${esc_(d.name)} 你好，</p>${childDetailsBlock_(d,true)}<p>已收到你的預約及信用卡設定：<b>${esc_(dates)}</b>。</p><p><b>總額：${yen}</b>，共 ${d.kidsCount} 位小朋友。</p><p>同一日、同一時段須於上課前最少 3 日滿 3 人確認開班後才收費；最多 6 人。整週預約須四日均符合開班條件。已確認班可預約至前一日。已確認班別可隨即扣款，未能開班不收費。</p><p>確認及扣款前可<a href="${cancelLink_(d.ref)}">免費取消</a>。確認後，上課前 14 日或以上可退 50%；少於 14 日或缺席恕不退款。單日按所選日期、整週按第一日計算。</p>${bookingDirections_(d,true)}${bring_(true)}${signoff_(true,d.ref)}`:
+    `<p>Hi ${esc_(d.name)},</p>${childDetailsBlock_(d,false)}<p>We have received your booking and saved card: <b>${esc_(dates)}</b>.</p><p><b>Total: ${yen}</b> for ${d.kidsCount} child(ren).</p><p>Each dated session needs at least 3 children confirmed at least 3 days before class, with a maximum of 6. We charge after confirmation. Weekly bookings require all 4 days to qualify. Confirmed classes accept late bookings until the day before. Confirmed classes may be charged immediately. Classes that do not run are not charged.</p><p><a href="${cancelLink_(d.ref)}">Cancel free before confirmation and charging</a>. After confirmation: 50% refund with 14+ days' notice; less than 14 days and no-shows are non-refundable. Notice is measured from the selected day, or the first day of a weekly booking.</p>${bookingDirections_(d,false)}${bring_(false)}${signoff_(false,d.ref)}`;
   return {subject:zh?'已收到預約 · '+bookingSubjectWeeks_(d,true):'Booking received · '+bookingSubjectWeeks_(d,false),body:body};
 }
-function confirmedEmail_(d,code,charged){var zh=d.lang==='zh',date=weekLabel_(code,zh),t=sessTimes_(code,zh);return {subject:zh?'預約確認 · '+date:'Confirmed · '+date,body:zh?`<p>${esc_(d.name)} 你好，</p>${childDetailsBlock_(d,true)}<p>你所選的 <b>${esc_(date)}</b> 已確認開班。</p><p><b>已收費 ${esc_(charged)}</b>。Stripe 會另外寄出收據。</p><p>${t.doors}，${t.line}。</p>${directions_(true)}${bring_(true)}${signoff_(true,d.ref)}`:`<p>Hi ${esc_(d.name)},</p>${childDetailsBlock_(d,false)}<p>Your booked class, <b>${esc_(date)}</b>, is confirmed.</p><p><b>Charged: ${esc_(charged)}</b>. Your Stripe receipt will arrive separately.</p><p>${t.doors}, ${t.line}.</p>${directions_(false)}${bring_(false)}${signoff_(false,d.ref)}`};}
-function reminderEmail_(d,code){var zh=d.lang==='zh',date=weekLabel_(code,zh),t=sessTimes_(code,zh);return {subject:zh?'上課提醒 · '+date:'Class reminder · '+date,body:zh?`<p>${esc_(d.name)} 你好，</p><p>期待在 <b>${esc_(date)}</b> 見到 ${esc_(childNames_(d,true))}。</p><p>${t.doorsStart}。${t.pickup}。</p>${directions_(true)}${bring_(true)}${signoff_(true,d.ref)}`:`<p>Hi ${esc_(d.name)},</p><p>We look forward to seeing ${esc_(childNames_(d,false))} for <b>${esc_(date)}</b>.</p><p>${t.doorsStart}. ${t.pickup}.</p>${directions_(false)}${bring_(false)}${signoff_(false,d.ref)}`};}
+function confirmedEmail_(d,code,charged){var zh=d.lang==='zh',date=weekLabel_(code,zh),t=sessTimes_(code,zh);return {subject:zh?'預約確認 · '+date:'Confirmed · '+date,body:zh?`<p>${esc_(d.name)} 你好，</p>${childDetailsBlock_(d,true)}<p>你所選的 <b>${esc_(date)}</b> 已確認開班。</p><p><b>已收費 ${esc_(charged)}</b>。Stripe 會另外寄出收據。</p><p>${t.doors}，${t.line}。</p>${bookingDirections_(d,true)}${bring_(true)}${signoff_(true,d.ref)}`:`<p>Hi ${esc_(d.name)},</p>${childDetailsBlock_(d,false)}<p>Your booked class, <b>${esc_(date)}</b>, is confirmed.</p><p><b>Charged: ${esc_(charged)}</b>. Your Stripe receipt will arrive separately.</p><p>${t.doors}, ${t.line}.</p>${bookingDirections_(d,false)}${bring_(false)}${signoff_(false,d.ref)}`};}
+function reminderEmail_(d,code){var zh=d.lang==='zh',date=weekLabel_(code,zh),t=sessTimes_(code,zh);return {subject:zh?'上課提醒 · '+date:'Class reminder · '+date,body:zh?`<p>${esc_(d.name)} 你好，</p><p>期待在 <b>${esc_(date)}</b> 見到 ${esc_(childNames_(d,true))}。</p><p>${t.doorsStart}。${t.pickup}。</p>${bookingDirections_(d,true)}${bring_(true)}${signoff_(true,d.ref)}`:`<p>Hi ${esc_(d.name)},</p><p>We look forward to seeing ${esc_(childNames_(d,false))} for <b>${esc_(date)}</b>.</p><p>${t.doorsStart}. ${t.pickup}.</p>${bookingDirections_(d,false)}${bring_(false)}${signoff_(false,d.ref)}`};}
 function thanksEmail_(d){var zh=d.lang==='zh';return {subject:zh?'多謝你，'+childNames_(d,true)+'！':'Thank you, '+childNames_(d,false)+'!',body:zh?`<p>${esc_(d.name)} 你好，</p><p>多謝你讓 ${esc_(childNames_(d,true))} 和我們一起學日文！希望下次來東京再見。</p>${signoff_(true,'')}`:`<p>Hi ${esc_(d.name)},</p><p>Thank you for letting ${esc_(childNames_(d,false))} learn Japanese with us! We hope to see you next time you are in Tokyo.</p>${signoff_(false,'')}`};}
-function statusEmail_(d,status,note){if(!d.email)return;if(status==='card saved')return sendEmail_(d,holdEmail_(d));if(status==='cancelled')return sendEmail_(d,cancelledEmail_(d));if(status==='paid'){var m=/paid ((?:W\d+|D\d{8})(?:AM|PM))(?: (¥[\d,]+))?/.exec(String(note||''));if(!m)throw new Error('Missing paid class');return sendEmail_(d,confirmedEmail_(d,m[1],m[2]||'¥'+(bookingUnit_(m[1]).price*d.kidsCount).toLocaleString('en-US')));}}
+function statusEmail_(d,status,note){if(!d.email)return;if(status==='card saved')return sendEmail_(d,holdEmail_(d));if(status==='cancelled')return sendEmail_(d,cancelledEmail_(d));if(status==='paid'){var m=/paid (K?(?:W\d+|D\d{8})(?:AM|PM))(?: (¥[\d,]+))?/.exec(String(note||''));if(!m)throw new Error('Missing paid class');return sendEmail_(d,confirmedEmail_(d,m[1],m[2]||'¥'+(bookingUnit_(m[1]).price*d.kidsCount).toLocaleString('en-US')));}}
 function dailyEmails(){
   var lock=LockService.getScriptLock();if(!lock.tryLock(20000))return;try{
   var classes=reconcileClasses_();
@@ -159,4 +160,15 @@ function installDailyBookingV9(){
     if(!ScriptApp.getProjectTriggers().some(function(t){return t.getHandlerFunction()==='dailyEmails';}))ScriptApp.newTrigger('dailyEmails').timeBased().everyDays(1).atHour(8).inTimezone('Asia/Tokyo').create();
     console.log('TWC booking v9 ready: correct spreadsheet, daily price 14000, weekly price 48000, 3–6 children, 3-day confirmation. Existing data and triggers preserved. No emails sent by setup.');
   }finally{lock.releaseLock();}
+}
+
+// Original W1–W12 / D codes remain Musashi-Koyama; K-prefixed codes are Kaminoge.
+function bookingMondays_(){return Array.from({length:21},function(_,i){return Utilities.formatDate(new Date(Date.parse('2026-10-05T00:00:00Z')+i*7*86400000),'UTC','yyyy-MM-dd');});}
+function bookingVenueName_(venue,zh){return venue==='kaminoge'?(zh?'上野毛':'Kaminoge'):(zh?'武藏小山':'Musashi-Koyama');}
+function bookingDirections_(d,zh){
+  var venue=bookingUnits_(d.codes)[0].venue,k=venue==='kaminoge';
+  var address=k?'東京都世田谷区上野毛1-28-3':'東京都目黒区目黒本町5-10-19 Aliquot Turm 301';
+  var en=k?'1-28-3 Kaminoge, Setagaya, Tokyo':'Aliquot Turm 301, 5-10-19 Megurohoncho, Meguro, Tokyo';
+  var route=k?(zh?'東急大井町線上野毛站步行1分鐘。':'One minute on foot from Kaminoge Station on the Tokyu Oimachi Line.'):(zh?'東急目黑線武藏小山站步行7分鐘，或西小山站步行6分鐘。':'Seven minutes from Musashi-Koyama Station, or six minutes from Nishi-Koyama Station on the Tokyu Meguro Line.');
+  return '<h3>'+(zh?'上課地點':'Your venue')+' · '+bookingVenueName_(venue,zh)+'</h3><p>'+(zh?address:en)+'</p><p>'+route+'</p><p><a href="https://www.google.com/maps/search/?api=1&amp;query='+encodeURIComponent(address)+'">'+(zh?'查看地圖':'View map')+'</a></p><p>'+(zh?'的士地址：':'Taxi address: ')+address+'</p>';
 }

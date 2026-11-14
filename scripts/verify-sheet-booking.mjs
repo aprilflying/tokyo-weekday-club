@@ -66,3 +66,25 @@ assert.equal(read(ctx.chargeableBooking_({ref:'UNDERFILL1',code:'D20261124PM'}))
 assert.equal(ctx.holdEmail_({name:'Test',kids:'Test',kidsCount:1,codes:'D20261123AM',amount:14000,ref:'TESTREF',lang:'en'}).body.includes('¥14,000'),true);
 assert.match(ctx.holdEmail_({name:'Test',kids:'Test',kidsCount:1,codes:'D20261123AM',amount:14000,ref:'TESTREF',lang:'zh'}).body,/最少 3 日/);
 console.log('Sheet reservation, shared capacity, next-week bookings, 3-day confirmation, daily cancellation, late top-ups and bilingual email tests passed. All services are mocked.');
+now=Date.parse('2027-02-01T00:00:00+09:00');
+assert.equal(ctx.bookingUnit_('W21AM').dates[3],'2027-02-25');
+assert.equal(reserve('KAMFEB001','KD20270222AM',2).ok,true); activate('KAMFEB001','KD20270222AM',2);
+assert.equal(reserve('MUSFEB001','D20270222AM',1).ok,true); activate('MUSFEB001','D20270222AM',1);
+assert.equal(ctx.counts_(true).classes.KD20270222AM,undefined,'Two venues cannot combine to meet the minimum');
+assert.equal(reserve('KAMFEB002','KD20270222AM',1).ok,true); activate('KAMFEB002','KD20270222AM',1);
+assert.equal(ctx.counts_(true).classes.KD20270222AM,'confirmed');
+assert.equal(ctx.counts_(true).classes.D20270222AM,undefined);
+assert.equal(reserve('KAMFEB003','KD20270222AM',3).ok,true);
+assert.equal(reserve('KAMFEB004','KD20270222AM',1).code,'full');
+assert.equal(reserve('MUSFEB002','D20270222AM',5).ok,true,'Other venue retains its own capacity');
+assert.equal(reserve('MIXVENUE1','KD20270223AM-D20270224AM').ok,false);
+assert.equal(reserve('KAMWEEK21','KW21PM',1).amountJpy,48000);
+for(const code of ['W22AM','KD20270301AM','KD20270226AM'])assert.throws(()=>ctx.bookingUnit_(code));
+assert.match(ctx.bookingDirections_({codes:'KD20270222AM'},false),/1-28-3 Kaminoge/);
+assert.match(ctx.bookingDirections_({codes:'D20270222AM'},true),/Aliquot Turm 301/);
+assert.match(ctx.weekLabel_('KW21AM',true),/上野毛.*2月22日.*2月25日/);
+console.log('Two venues have separate capacity, confirmation and directions; February dates are valid.');
+
+ctx.statusEmail_({email:'parent@example.invalid',ref:'KAMFEB001',codes:'KD20270222AM',kidsCount:2,lang:'en'},'paid','paid KD20270222AM ¥28,000');
+assert.match(messages.at(-1).body,/Kaminoge/);
+assert.match(messages.at(-1).body,/¥28,000/);
