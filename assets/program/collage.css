@@ -1,0 +1,20 @@
+.word-collage{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px 30px;padding:28px 6px 10px;align-items:center}
+.word-piece{position:relative;margin:0;min-width:0;display:flex;flex-direction:column;align-items:center;padding-bottom:8px}
+.word-cutout{width:100%;max-width:235px;aspect-ratio:1;background-image:url('/assets/program/japanese-everyday-collage.png');background-size:400% 200%;background-repeat:no-repeat;position:relative}
+.word-label{display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;margin-top:-5px;transform:rotate(-4deg);text-align:center}
+.word-label::before{content:'↗';position:absolute;left:-27px;top:-21px;font-family:'Caveat',cursive;font-size:32px;color:#C0392B;transform:rotate(-20deg)}
+.word-japanese{font-family:'Zen Maru Gothic','Huninn',sans-serif;font-size:clamp(20px,2.2vw,28px);font-weight:700;line-height:1.45;color:#C0392B;background:#F8DDD8;padding:0 10px;border-radius:2px}
+.word-roman{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.04em;line-height:1.7;margin-top:4px;color:rgba(15,15,18,.55)}
+.word-meaning{font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-size:19px;font-weight:600;line-height:1.5}
+.word-piece:nth-child(2n){transform:translateY(12px)}
+.word-piece:nth-child(2n) .word-label{transform:rotate(4deg)}
+.word-piece:nth-child(3n) .word-japanese{background:#F1EAE0}
+.word-hello .word-cutout{transform:rotate(-8deg)}
+.word-red .word-cutout{transform:rotate(8deg)}
+.word-football .word-cutout{transform:rotate(-7deg)}
+.word-train .word-cutout{transform:rotate(5deg)}
+.word-kana{font-family:'Zen Maru Gothic',sans-serif}
+.collage-kana{position:absolute;left:45%;top:24%;font-family:'Zen Maru Gothic','Huninn',sans-serif;font-size:clamp(40px,5vw,62px);line-height:1;color:#C0392B;transform:rotate(10deg)}
+.collage-footnote{text-align:center;margin:30px 0 0;font-size:13px;color:rgba(15,15,18,.5)}
+@media(max-width:700px){.word-collage{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 26px;padding-top:18px}.word-cutout{max-width:205px}.word-japanese{font-size:22px}.word-meaning{font-size:17px}.collage-kana{font-size:46px}}
+@media(max-width:380px){.word-collage{gap:16px 14px}.word-japanese{font-size:19px;padding:0 6px}.word-label::before{left:-17px;font-size:25px}.word-roman{font-size:10px}.collage-kana{font-size:37px}}

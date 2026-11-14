@@ -52,8 +52,8 @@ async function isolateNetwork(page, origins, holdRequests) {
     if (pathname === '/_broken-control') { res.setHeader('Content-Type', 'text/html'); return res.end(brokenHtml); }
     const filename = pathname === '/' ? 'index.html' : pathname === '/hk' ? 'hk.html' : pathname.slice(1);
     const target = path.resolve(root, filename);
-    if (!target.startsWith(root + path.sep) || !/\.(html|js|png|jpg|ico)$/.test(filename) || !fs.existsSync(target)) { res.statusCode = 404; return res.end(); }
-    res.setHeader('Content-Type', filename.endsWith('.js') ? 'text/javascript' : filename.endsWith('.html') ? 'text/html' : 'application/octet-stream');
+    if (!target.startsWith(root + path.sep) || !/\.(html|js|css|png|jpg|ico)$/.test(filename) || !fs.existsSync(target)) { res.statusCode = 404; return res.end(); }
+    res.setHeader('Content-Type', filename.endsWith('.js') ? 'text/javascript' : filename.endsWith('.css') ? 'text/css' : filename.endsWith('.html') ? 'text/html' : 'application/octet-stream');
     res.end(fs.readFileSync(target));
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));

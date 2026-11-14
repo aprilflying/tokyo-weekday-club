@@ -43,6 +43,7 @@
 <rect width="1200" height="800" fill="#FAF7F2"/>
 </svg>
 </template>
+<link rel="stylesheet" href="/assets/program/collage.css">
 </head>
 <body>
 <x-dc>
@@ -264,48 +265,46 @@ summary::-webkit-details-marker{display:none}
 <figure style="margin:0"><img src="/assets/venues/kaminoge-exterior.png" alt="Kaminoge venue exterior" loading="lazy" width="1214" height="1295" style="display:block;width:100%;aspect-ratio:4/3;height:auto;object-fit:cover;object-position:center 62%;border-radius:20px;border:1px solid #0F0F12"><figcaption style="margin-top:10px;font-size:14px"><sc-if value="{{ en }}"><span>Kaminoge · 1-28-3 Kaminoge</span></sc-if><sc-if value="{{ zh }}"><span>上野毛 · 上野毛1-28-3</span></sc-if></figcaption></figure>
 <figure style="margin:0"><img src="/assets/venues/musashi-koyama-classroom.png" alt="Musashi-Koyama classroom" loading="lazy" width="1206" height="949" style="display:block;width:100%;aspect-ratio:4/3;height:auto;object-fit:cover;object-position:center;border-radius:20px;border:1px solid #0F0F12"><figcaption style="margin-top:10px;font-size:14px"><sc-if value="{{ en }}"><span>Musashi-Koyama · Aliquot Turm 501</span></sc-if><sc-if value="{{ zh }}"><span>武藏小山 · Aliquot Turm 501</span></sc-if></figcaption></figure></div></section>
 
-<section id="program" style="max-width:1180px;margin:0 auto;padding:16px 5vw 80px">
-  <div style="">
-    <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.12em;color:#C0392B;margin-bottom:12px">the program</div>
-    <sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><h2 style="font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-weight:900;font-size:clamp(30px,4vw,42px);letter-spacing:-0.01em;margin:0 0 14px">Start with just 1 day</h2></sc-if>
-    <sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><h2 style="font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-weight:900;font-size:clamp(28px,3.6vw,38px);margin:0 0 14px">1日起，靈活參加</h2></sc-if>
-    <p style="font-size:16px;color:rgba(15,15,18,.68);margin:0 0 28px;max-width:560px"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>Only here for a few days? Join a single day, or choose a full themed week. Three full weeks build towards Level 1.</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>可選單日或整週課程，配合你的東京行程。完成3個完整主題週即可完成 Level 1。</span></sc-if></p>
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px">
-      <button onClick="{{ prevPg }}" aria-label="previous week" style="width:40px;height:40px;border-radius:999px;background:#FAF7F2;border:1px solid #0F0F12;font-family:'JetBrains Mono',monospace;font-size:16px;cursor:pointer;transition:transform .15s cubic-bezier(.2,.7,.2,1)" style-hover="transform:translate(-2px,0)">←</button>
-      <button onClick="{{ nextPg }}" aria-label="next week" style="width:40px;height:40px;border-radius:999px;background:#FAF7F2;border:1px solid #0F0F12;font-family:'JetBrains Mono',monospace;font-size:16px;cursor:pointer;transition:transform .15s cubic-bezier(.2,.7,.2,1)" style-hover="transform:translate(2px,0)">→</button>
-      <span style="font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:0.08em;color:#0F0F12">{{ pgLabel }}</span>
-    </div>
-    <sc-if value="{{ pgRest }}" hint-placeholder-val="{{ false }}">
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px">
-      <div style="background:#FAF7F2;border:1px dashed rgba(15,15,18,.35);border-radius:22px;padding:32px;min-height:220px;display:grid;align-content:start;gap:14px"><div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#C0392B">{{ pgA }}</div><div style="font-family:'Caveat','Huninn','Zen Maru Gothic',cursive;font-size:22px;color:rgba(15,15,18,.5)"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>program coming soon</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>課程即將公佈</span></sc-if></div></div>
-      <div style="background:#FAF7F2;border:1px dashed rgba(15,15,18,.35);border-radius:22px;padding:32px;min-height:220px;display:grid;align-content:start;gap:14px"><div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#C0392B">{{ pgB }}</div><div style="font-family:'Caveat','Huninn','Zen Maru Gothic',cursive;font-size:22px;color:rgba(15,15,18,.5)"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>program coming soon</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>課程即將公佈</span></sc-if></div></div>
-      <div style="background:#FAF7F2;border:1px dashed rgba(15,15,18,.35);border-radius:22px;padding:32px;min-height:220px;display:grid;align-content:start;gap:14px"><div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#C0392B">{{ pgC }}</div><div style="font-family:'Caveat','Huninn','Zen Maru Gothic',cursive;font-size:22px;color:rgba(15,15,18,.5)"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>program coming soon</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>課程即將公佈</span></sc-if></div></div>
-    </div>
-    </sc-if>
-    <sc-if value="{{ pg1 }}" hint-placeholder-val="{{ true }}">
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;position:relative">
-      <div style="background:#FAF7F2;border:1px solid #0F0F12;border-radius:22px;padding:32px;transition:transform .25s cubic-bezier(.2,.7,.2,1)" style-hover="transform:translateY(-4px)">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#C0392B;margin-bottom:14px">week 1a</div>
-        <h3 style="font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-weight:700;font-size:22px;margin:0 0 14px"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>Tourist Starter Pack I</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>遊客入門包 I</span></sc-if></h3>
-        <div style="display:grid;gap:8px;font-size:15px;line-height:1.5;color:rgba(15,15,18,.75)"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><div>Self-introduction</div><div>At the restaurant</div><div>Hiragana basics</div><div>Japanese culture</div></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><div>自我介紹</div><div>餐廳篇</div><div>平假名基礎</div><div>日本文化</div></sc-if></div>
-        
-      </div>
-      <div style="background:#FAF7F2;border:1px solid #0F0F12;border-radius:22px;padding:32px;transition:transform .25s cubic-bezier(.2,.7,.2,1)" style-hover="transform:translateY(-4px)">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#C0392B;margin-bottom:14px">week 2a</div>
-        <h3 style="font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-weight:700;font-size:22px;margin:0 0 14px"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>Tourist Starter Pack II</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>遊客入門包 II</span></sc-if></h3>
-        <div style="display:grid;gap:8px;font-size:15px;line-height:1.5;color:rgba(15,15,18,.75)"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><div>Colours</div><div>At the café</div><div>Hiragana basics</div><div>Japanese culture</div></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><div>顏色</div><div>咖啡店篇</div><div>平假名基礎</div><div>日本文化</div></sc-if></div>
-        
-      </div>
-      <div style="background:#FAF7F2;border:1px solid #0F0F12;border-radius:22px;padding:32px;transition:transform .25s cubic-bezier(.2,.7,.2,1)" style-hover="transform:translateY(-4px)">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#C0392B;margin-bottom:14px">week 3a</div>
-        <h3 style="font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-weight:700;font-size:22px;margin:0 0 14px"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>Tourist Starter Pack III</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>遊客入門包 III</span></sc-if></h3>
-        <div style="display:grid;gap:8px;font-size:15px;line-height:1.5;color:rgba(15,15,18,.75)"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><div>Likes and hobbies</div><div>Shopping</div><div>Hiragana basics</div><div>Japanese culture</div></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><div>喜好與興趣</div><div>購物篇</div><div>平假名基礎</div><div>日本文化</div></sc-if></div>
-        
-      </div>
-      <div style="position:absolute;top:-30px;right:8px;font-family:'Caveat','Huninn','Zen Maru Gothic',cursive;font-size:23px;color:#C0392B;transform:rotate(3deg)"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"></sc-if></div>
-    </div>
-    </sc-if>
+<section id="program" class="program-section" style="max-width:1180px;margin:0 auto;padding:16px 5vw 80px">
+  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.12em;color:#C0392B;margin-bottom:12px">the program</div>
+  <sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><h2 style="font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-weight:900;font-size:clamp(30px,4vw,42px);letter-spacing:-0.01em;margin:0 0 14px">Start with just 1 day</h2></sc-if>
+  <sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><h2 style="font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-weight:900;font-size:clamp(28px,3.6vw,38px);margin:0 0 14px">1日起，靈活參加</h2></sc-if>
+  <p style="font-size:17px;color:rgba(15,15,18,.68);margin:0 0 12px"><sc-if value="{{ en }}">Little words. Everyday Tokyo adventures.</sc-if><sc-if value="{{ zh }}">學幾句日文，去東京試吓用。</sc-if></p>
+  <div class="word-collage">
+      <figure class="word-piece word-hello">
+        <div class="word-cutout" style="background-position:0% 0%" aria-hidden="true"></div>
+        <figcaption class="word-label"><span class="word-japanese" lang="ja">こんにちは</span><span class="word-roman">konnichiwa</span><span class="word-meaning"><sc-if value="{{ en }}">Hello</sc-if><sc-if value="{{ zh }}">你好</sc-if></span></figcaption>
+      </figure>
+      <figure class="word-piece word-onigiri">
+        <div class="word-cutout" style="background-position:33.333333% 0%" aria-hidden="true"></div>
+        <figcaption class="word-label"><span class="word-japanese" lang="ja">おにぎり</span><span class="word-roman">onigiri</span><span class="word-meaning"><sc-if value="{{ en }}">Rice ball</sc-if><sc-if value="{{ zh }}">飯糰</sc-if></span></figcaption>
+      </figure>
+      <figure class="word-piece word-juice">
+        <div class="word-cutout" style="background-position:66.666667% 0%" aria-hidden="true"></div>
+        <figcaption class="word-label"><span class="word-japanese" lang="ja">ジュース</span><span class="word-roman">jūsu</span><span class="word-meaning"><sc-if value="{{ en }}">Juice</sc-if><sc-if value="{{ zh }}">果汁</sc-if></span></figcaption>
+      </figure>
+      <figure class="word-piece word-red">
+        <div class="word-cutout" style="background-position:100% 0%" aria-hidden="true"></div>
+        <figcaption class="word-label"><span class="word-japanese" lang="ja">あか</span><span class="word-roman">aka</span><span class="word-meaning"><sc-if value="{{ en }}">Red</sc-if><sc-if value="{{ zh }}">紅色</sc-if></span></figcaption>
+      </figure>
+      <figure class="word-piece word-football">
+        <div class="word-cutout" style="background-position:0% 100%" aria-hidden="true"></div>
+        <figcaption class="word-label"><span class="word-japanese" lang="ja">サッカー</span><span class="word-roman">sakkā</span><span class="word-meaning"><sc-if value="{{ en }}">Football</sc-if><sc-if value="{{ zh }}">足球</sc-if></span></figcaption>
+      </figure>
+      <figure class="word-piece word-train">
+        <div class="word-cutout" style="background-position:33.333333% 100%" aria-hidden="true"></div>
+        <figcaption class="word-label"><span class="word-japanese" lang="ja">でんしゃ</span><span class="word-roman">densha</span><span class="word-meaning"><sc-if value="{{ en }}">Train</sc-if><sc-if value="{{ zh }}">電車</sc-if></span></figcaption>
+      </figure>
+      <figure class="word-piece word-hiragana">
+        <div class="word-cutout" style="background-position:66.666667% 100%" aria-hidden="true"><span class="collage-kana" lang="ja" aria-hidden="true">あ</span></div>
+        <figcaption class="word-label"><span class="word-japanese" lang="ja">あいうえお</span><span class="word-roman">a i u e o</span><span class="word-meaning"><sc-if value="{{ en }}">Hiragana</sc-if><sc-if value="{{ zh }}">平假名</sc-if></span></figcaption>
+      </figure>
+      <figure class="word-piece word-origami">
+        <div class="word-cutout" style="background-position:100% 100%" aria-hidden="true"></div>
+        <figcaption class="word-label"><span class="word-japanese" lang="ja">おりがみ</span><span class="word-roman">origami</span><span class="word-meaning"><sc-if value="{{ en }}">Origami</sc-if><sc-if value="{{ zh }}">摺紙</sc-if></span></figcaption>
+      </figure>
   </div>
+  <p class="collage-footnote"><sc-if value="{{ en }}">A little of what we'll explore together.</sc-if><sc-if value="{{ zh }}">一齊探索的小小例子。</sc-if></p>
 </section>
 
 <section style="background:#F1EAE0;border-top:1px solid #0F0F12;border-bottom:1px solid #0F0F12">
@@ -653,7 +652,7 @@ class Component extends DCLogic {
     sheetEndpoint: 'https://script.google.com/macros/s/AKfycbwThrbKlH6gaWrqpzVSSM0D_5uKiAs8JA5Hr0TN-fWcErEbydmm3hkUsSpnLCnZBGMT/exec',
     sheetToken: 'CHANGE-ME-to-a-long-random-string'   // same string as the Apps Script and Vercel SITE_TOKEN
   };
-  state = { venue: new URLSearchParams(window.location.search).get('venue') === 'kaminoge' ? 'kaminoge' : 'musashi-koyama', lang: 'zh', sent: false, sels: {}, daySels: {}, bookingType: new URLSearchParams(window.location.search).get('booking') === 'week' ? 'week' : 'day', pg: 0 };
+  state = { venue: new URLSearchParams(window.location.search).get('venue') === 'kaminoge' ? 'kaminoge' : 'musashi-koyama', lang: 'zh', sent: false, sels: {}, daySels: {}, bookingType: new URLSearchParams(window.location.search).get('booking') === 'week' ? 'week' : 'day' };
   trackStart() { if (this._bkStarted) return; this._bkStarted = true; try { if (window.posthog && posthog.capture) posthog.capture('booking_started', { lang: this.state.lang ?? (document.documentElement.lang === 'zh-Hant' ? 'zh' : 'en') }); } catch (err) {} }
   renderVals() {
     const lang = this.state.lang ?? this.props.lang ?? 'zh';
@@ -847,11 +846,6 @@ class Component extends DCLogic {
       kidOpts: [1, 2, 3, 4, 5, 6].map(n => ({ v: n, label: en ? (n + (n === 1 ? ' kid' : ' kids')) : n + '位小朋友' })),
       kidAges: Array.from({ length: this.state.kids ?? 1 }, (_, i) => ({ label: en ? 'Age' : '年齡', firstLabel: en ? 'Kid ' + (i + 1) + ' first name' : '小朋友' + (i + 1) + ' 名字', lastLabel: en ? 'Kid ' + (i + 1) + ' last name' : '小朋友' + (i + 1) + ' 姓氏' })),
       sunBoxRef: this.sunBoxRef, sunBigRef: this.sunBigRef, sunSmallRef: this.sunSmallRef, sunMidRef: this.sunMidRef, sunTinyRef: this.sunTinyRef,
-      pg1: this.state.pg === 0, pgRest: this.state.pg > 0,
-      pgLabel: ['level 1 · tourist starter pack', 'level 2 · little city explorer', 'level 3 · little local'][this.state.pg],
-      pgA: 'level ' + (this.state.pg + 1) + ' · part I', pgB: 'level ' + (this.state.pg + 1) + ' · part II', pgC: 'level ' + (this.state.pg + 1) + ' · part III',
-      prevPg: () => this.setState(s => ({ pg: (s.pg + 2) % 3 })),
-      nextPg: () => this.setState(s => ({ pg: (s.pg + 1) % 3 })),
     };
   }
 }
