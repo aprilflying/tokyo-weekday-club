@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
-import { normaliseBooking, parseCode, sessionCodes, canBook, confirmationDeadline, readyToCharge } from '../lib/bookings.js';
+import { normaliseBooking, parseCode, sessionCodes, canBook, confirmationDeadline, readyToCharge, bookingAmount, PRICING_VERSION } from '../lib/bookings.js';
 import { createHoldHandler } from '../lib/checkout.js';
 import { createBilling } from '../lib/billing.js';
 const now=Date.parse('2026-11-08T00:00:00+09:00');
 const day={bookingType:'day',days:[{date:'2026-11-23',s:'am'}],kidsCount:2};
-assert.equal(normaliseBooking(day,now).total,28000);
-assert.equal(normaliseBooking({...day,amountJpy:1},now).total,28000);
-assert.equal(normaliseBooking({weeks:[{i:7,s:'am'}],kidsCount:6},now).total,288000);
+assert.equal(normaliseBooking(day,now).total,25200);
+assert.equal(normaliseBooking({...day,amountJpy:1,discountPercent:100,pricingVersion:"legacy"},now).total,25200);
+assert.equal(normaliseBooking({weeks:[{i:7,s:'am'}],kidsCount:6},now).total,230400);
 for(const bad of [
  {...day,kidsCount:7},{...day,kidsCount:0},{...day,kidsCount:1.5},
  {...day,days:[{date:'2026-11-27',s:'am'}]}, {...day,days:[{date:'2026-11-31',s:'am'}]},
@@ -29,9 +29,9 @@ assert.equal(readyToCharge(week,{classes:{D20261123AM:'confirmed'}},now),false);
 let calls=[];
 const stripe={customers:{create:async p=>{calls.push(['customer',p]);return{id:'cus_test'};}},checkout:{sessions:{list:async()=>({data:[]}),create:async p=>{calls.push(['checkout',p]);return{url:'https://checkout.example.invalid'};}}}};
 const body={...day,token:'test',terms:'yes',ref:'TESTREF12345',name:'Test Parent',email:'parent@example.invalid'};
-const handler=createHoldHandler({stripe,sheet:async p=>{calls.push(['reserve',p]);return{ok:true};},token:'test',siteUrl:'https://example.invalid',now:()=>now});
+const handler=createHoldHandler({stripe,sheet:async p=>{calls.push(['reserve',p]);return{ok:true,amountJpy:p.amountJpy};},token:'test',siteUrl:'https://example.invalid',now:()=>now});
 let response=await handler({json:async()=>body});let data=await response.json();
-assert.equal(data.totalJpy,28000);assert.equal(calls[0][0],'reserve');assert.equal(calls[2][1].mode,'setup');assert.equal(calls[2][1].metadata.weeks,'D20261123AM');
+assert.equal(data.totalJpy,25200);assert.equal(calls[0][0],'reserve');assert.equal(calls[2][1].mode,'setup');assert.equal(calls[2][1].metadata.weeks,'D20261123AM');
 assert.equal(calls[2][1].expires_at,Math.floor(now/1000)+1800);
 assert.equal(new URL(calls[2][1].success_url).pathname,'/');
 assert.equal(new URL(calls[2][1].cancel_url).searchParams.get('booking'),'day');
@@ -63,8 +63,36 @@ assert.equal(parseCode('KW21AM').venue,'kaminoge');
 assert.equal(parseCode('D20270225PM').venue,'musashi-koyama');
 for(const code of ['W22AM','KW22AM','D20270301AM','KD20270301AM','D20270226AM','KD20270229AM','XD20270222AM']) assert.throws(()=>parseCode(code));
 const kFeb=normaliseBooking({...day,venue:'kaminoge',days:[{date:'2027-02-25',s:'pm'}]},now);
-assert.equal(kFeb.codes[0],'KD20270225PM'); assert.equal(kFeb.total,28000);
+assert.equal(kFeb.codes[0],'KD20270225PM'); assert.equal(kFeb.total,25200);
 assert.equal(normaliseBooking({venue:'kaminoge',weeks:[{i:20,s:'am'}],kidsCount:1},now).codes[0],'KW21AM');
 assert.throws(()=>normaliseBooking({...day,venue:'unknown'},now));
 assert.equal(readyToCharge(parseCode('KD20261123AM'),confirmed,now),false,'Musashi-Koyama confirmation cannot charge Kaminoge');
 console.log('Calendar through 25 February 2027 and venue isolation validated.');
+
+// Family prices apply to every child and every selected day/week, at both venues.
+for (const [kids,daily,weekly] of [[1,14000,48000],[2,25200,86400],[3,33600,115200],[4,44800,153600],[6,67200,230400]]) {
+ for (const venue of ['musashi-koyama','kaminoge']) {
+  assert.equal(normaliseBooking({...day,venue,kidsCount:kids},now).total,daily);
+  assert.equal(normaliseBooking({venue,weeks:[{i:7,s:'am'},{i:8,s:'pm'}],kidsCount:kids},now).total,weekly*2);
+ }
+}
+assert.equal(bookingAmount(14000,2,'daily-v1-min3'),28000,'Previously agreed prices remain unchanged');
+assert.throws(()=>bookingAmount(14000,2,'unknown'));
+for (const [kids,code,expected] of [[2,'D20261123AM',25200],[3,'KW8PM',115200]]) {
+ const ref='FAMILYTEST'+kids;
+ const familySession={...session,client_reference_id:ref,metadata:{weeks:code,kids:String(kids),pricing_version:PRICING_VERSION,total_jpy:String(expected)}};
+ availability={classes:{}};
+ await billing.cardSaved(familySession);
+ const inv=[...invoices.values()].find(i=>i.metadata.ref===ref);
+ assert.equal(inv.total,expected);
+ assert.equal(payments.includes(inv.id),false);
+ const seats=sessionCodes(parseCode(code));
+ availability={classes:Object.fromEntries(seats.map(c=>[c,'confirmed'])),confirmed:Object.fromEntries(seats.map(c=>[c,3]))};
+ await billing.confirm();
+ assert.equal(payments.filter(id=>id===inv.id).length,1);
+ await billing.cardSaved(familySession);
+ assert.equal(payments.filter(id=>id===inv.id).length,1,'Discounted invoice replays cannot charge twice');
+}
+const badTotal=createHoldHandler({stripe,sheet:async()=>({amountJpy:28000}),token:'test',siteUrl:'https://example.invalid',now:()=>now});
+assert.equal((await badTotal({json:async()=>body})).status,503,'Do not open Checkout if the Sheet price disagrees');
+console.log('Family discounts, legacy prices and discounted invoice replay passed.');

@@ -43,16 +43,20 @@ function counts_(fresh,excludeRef){
 }
 function reserveBooking_(b){
   var kids=Number(b.kidsCount),units=bookingUnits_(b.weekCodes),ref=String(b.ref||'');
+  if(b.pricingVersion && !['family-v2','daily-v1-min3'].includes(b.pricingVersion))return json_({ok:false,error:'Invalid pricing version'});
+  var discount=b.pricingVersion==='family-v2'?(kids>=3?20:kids===2?10:0):0;
+  var total=units.reduce(function(n,u){return n+Math.round(u.price*kids*(100-discount)/100);},0);
   if(!/^[A-Za-z0-9_-]{8,200}$/.test(ref)||!Number.isInteger(kids)||kids<1||kids>6||!units.length||units.length>20||b.terms!=='yes')return json_({ok:false,error:'Invalid booking'});
   if(units.some(function(u){return u.type!==units[0].type||u.venue!==units[0].venue;})||new Set(units.map(function(u){return u.date;})).size!==units.length)return json_({ok:false,error:'Duplicate or mixed dates'});
   if(units.some(function(u){return !canBookClass_(u,confirmedClasses_());}))return json_({ok:false,code:'booking_closed',error:'A selected date has closed.'});
   var row=bookingRow_(ref),sh=sheet_();
   if(row){var old=rowData_(sh,row);if(old.status==='cancelled')return json_({ok:false,code:'cancelled',error:'This booking was cancelled.'});
     if(old.codes!==b.weekCodes||old.kidsCount!==kids||String(old.email).toLowerCase()!==String(b.email).toLowerCase())return json_({ok:false,code:'ref_conflict',error:'Please start a new booking after changing your dates.'});
+    if(Number(old.amount)!==total)return json_({ok:false,code:'ref_conflict',error:'Please start a new booking to use the updated family price.'});
     if(['card active','card saved','paid'].includes(old.status))return json_({ok:false,code:'ref_conflict',error:'Your card has already been saved. Check your email.'});}
   var counts=counts_(true,ref),full=[];units.forEach(function(u){u.sessions.forEach(function(c){if(counts.sessions[c]+kids>6)full.push(c);});});
   if(full.length)return json_({ok:false,code:'full',full:full,error:'A selected session has insufficient places.'});
-  b.amountJpy=units.reduce(function(n,u){return n+u.price*kids;},0);b.weeksCount=units.length;b.tier=units[0].type;b.weeks=units.map(function(u){return weekLabel_(u.code,b.lang==='zh');}).join('; ');
+  b.amountJpy=total;b.weeksCount=units.length;b.tier=units[0].type;b.weeks=units.map(function(u){return weekLabel_(u.code,b.lang==='zh');}).join('; ');
   if(!row){appendBooking_(b);row=bookingRow_(ref);}else{sh.getRange(row,COL.weeks).setValue(s_(b.weeks));sh.getRange(row,COL.amount).setValue(b.amountJpy);sh.getRange(row,11).setValue(b.tier);}
   putHold_(ref,b.weekCodes,kids);SpreadsheetApp.flush();
   return json_({ok:true,bookingVersion:9,amountJpy:b.amountJpy});
@@ -93,16 +97,21 @@ function weekLabel_(code,zh){
   return bookingVenueName_(u.venue,zh)+' · '+display+' · '+(u.session==='AM'?'09:00–12:00':'14:00–17:00')+(zh?'（東京時間）':' (Tokyo time)');
 }
 function bookingSubjectWeeks_(d,zh){var codes=String(d.codes||'').split('-').filter(Boolean);return codes.length===1?weekLabel_(codes[0],zh):(zh?codes.length+' 個班別':codes.length+' classes');}
+function familySaving_(d,zh){
+  var subtotal=bookingUnits_(d.codes).reduce(function(n,u){return n+u.price*Number(d.kidsCount);},0);
+  var percent=subtotal?Math.round((1-Number(d.amount)/subtotal)*100):0;
+  return [10,20].includes(percent)?'<p>'+(zh?'已包括家庭優惠，減 '+percent+'%。':'Includes a '+percent+'% family discount.')+'</p>':'';
+}
 function holdEmail_(d){
   var zh=d.lang==='zh',codes=String(d.codes).split('-').filter(Boolean),dates=codes.map(function(c){return weekLabel_(c,zh);}).join('; '),yen='¥'+Number(d.amount).toLocaleString('en-US');
-  var body=zh?`<p>${esc_(d.name)} 你好，</p>${childDetailsBlock_(d,true)}<p>已收到你的預約及信用卡設定：<b>${esc_(dates)}</b>。</p><p><b>總額：${yen}</b>，共 ${d.kidsCount} 位小朋友。</p><p>同一日、同一時段須於上課前最少 3 日滿 3 人確認開班後才收費；最多 6 人。整週預約須四日均符合開班條件。已確認班可預約至前一日。已確認班別可隨即扣款，未能開班不收費。</p><p>確認及扣款前可<a href="${cancelLink_(d.ref)}">免費取消</a>。確認後，上課前 14 日或以上可退 50%；少於 14 日或缺席恕不退款。單日按所選日期、整週按第一日計算。</p>${bookingDirections_(d,true)}${bring_(true)}${signoff_(true,d.ref)}`:
-    `<p>Hi ${esc_(d.name)},</p>${childDetailsBlock_(d,false)}<p>We have received your booking and saved card: <b>${esc_(dates)}</b>.</p><p><b>Total: ${yen}</b> for ${d.kidsCount} child(ren).</p><p>Each dated session needs at least 3 children confirmed at least 3 days before class, with a maximum of 6. We charge after confirmation. Weekly bookings require all 4 days to qualify. Confirmed classes accept late bookings until the day before. Confirmed classes may be charged immediately. Classes that do not run are not charged.</p><p><a href="${cancelLink_(d.ref)}">Cancel free before confirmation and charging</a>. After confirmation: 50% refund with 14+ days' notice; less than 14 days and no-shows are non-refundable. Notice is measured from the selected day, or the first day of a weekly booking.</p>${bookingDirections_(d,false)}${bring_(false)}${signoff_(false,d.ref)}`;
+  var body=zh?`<p>${esc_(d.name)} 你好，</p>${childDetailsBlock_(d,true)}<p>已收到你的預約及信用卡設定：<b>${esc_(dates)}</b>。</p><p><b>總額：${yen}</b>，共 ${d.kidsCount} 位小朋友。</p>${familySaving_(d,true)}<p>同一日、同一時段須於上課前最少 3 日滿 3 人確認開班後才收費；最多 6 人。整週預約須四日均符合開班條件。已確認班可預約至前一日。已確認班別可隨即扣款，未能開班不收費。</p><p>確認及扣款前可<a href="${cancelLink_(d.ref)}">免費取消</a>。確認後，上課前 14 日或以上可退 50%；少於 14 日或缺席恕不退款。單日按所選日期、整週按第一日計算。</p>${bookingDirections_(d,true)}${bring_(true)}${signoff_(true,d.ref)}`:
+    `<p>Hi ${esc_(d.name)},</p>${childDetailsBlock_(d,false)}<p>We have received your booking and saved card: <b>${esc_(dates)}</b>.</p><p><b>Total: ${yen}</b> for ${d.kidsCount} child(ren).</p>${familySaving_(d,false)}<p>Each dated session needs at least 3 children confirmed at least 3 days before class, with a maximum of 6. We charge after confirmation. Weekly bookings require all 4 days to qualify. Confirmed classes accept late bookings until the day before. Confirmed classes may be charged immediately. Classes that do not run are not charged.</p><p><a href="${cancelLink_(d.ref)}">Cancel free before confirmation and charging</a>. After confirmation: 50% refund with 14+ days' notice; less than 14 days and no-shows are non-refundable. Notice is measured from the selected day, or the first day of a weekly booking.</p>${bookingDirections_(d,false)}${bring_(false)}${signoff_(false,d.ref)}`;
   return {subject:zh?'已收到預約 · '+bookingSubjectWeeks_(d,true):'Booking received · '+bookingSubjectWeeks_(d,false),body:body};
 }
 function confirmedEmail_(d,code,charged){var zh=d.lang==='zh',date=weekLabel_(code,zh),t=sessTimes_(code,zh);return {subject:zh?'預約確認 · '+date:'Confirmed · '+date,body:zh?`<p>${esc_(d.name)} 你好，</p>${childDetailsBlock_(d,true)}<p>你所選的 <b>${esc_(date)}</b> 已確認開班。</p><p><b>已收費 ${esc_(charged)}</b>。Stripe 會另外寄出收據。</p><p>${t.doors}，${t.line}。</p>${bookingDirections_(d,true)}${bring_(true)}${signoff_(true,d.ref)}`:`<p>Hi ${esc_(d.name)},</p>${childDetailsBlock_(d,false)}<p>Your booked class, <b>${esc_(date)}</b>, is confirmed.</p><p><b>Charged: ${esc_(charged)}</b>. Your Stripe receipt will arrive separately.</p><p>${t.doors}, ${t.line}.</p>${bookingDirections_(d,false)}${bring_(false)}${signoff_(false,d.ref)}`};}
 function reminderEmail_(d,code){var zh=d.lang==='zh',date=weekLabel_(code,zh),t=sessTimes_(code,zh);return {subject:zh?'上課提醒 · '+date:'Class reminder · '+date,body:zh?`<p>${esc_(d.name)} 你好，</p><p>期待在 <b>${esc_(date)}</b> 見到 ${esc_(childNames_(d,true))}。</p><p>${t.doorsStart}。${t.pickup}。</p>${bookingDirections_(d,true)}${bring_(true)}${signoff_(true,d.ref)}`:`<p>Hi ${esc_(d.name)},</p><p>We look forward to seeing ${esc_(childNames_(d,false))} for <b>${esc_(date)}</b>.</p><p>${t.doorsStart}. ${t.pickup}.</p>${bookingDirections_(d,false)}${bring_(false)}${signoff_(false,d.ref)}`};}
 function thanksEmail_(d){var zh=d.lang==='zh';return {subject:zh?'多謝你，'+childNames_(d,true)+'！':'Thank you, '+childNames_(d,false)+'!',body:zh?`<p>${esc_(d.name)} 你好，</p><p>多謝你讓 ${esc_(childNames_(d,true))} 和我們一起學日文！希望下次來東京再見。</p>${signoff_(true,'')}`:`<p>Hi ${esc_(d.name)},</p><p>Thank you for letting ${esc_(childNames_(d,false))} learn Japanese with us! We hope to see you next time you are in Tokyo.</p>${signoff_(false,'')}`};}
-function statusEmail_(d,status,note){if(!d.email)return;if(status==='card saved')return sendEmail_(d,holdEmail_(d));if(status==='cancelled')return sendEmail_(d,cancelledEmail_(d));if(status==='paid'){var m=/paid (K?(?:W\d+|D\d{8})(?:AM|PM))(?: (¥[\d,]+))?/.exec(String(note||''));if(!m)throw new Error('Missing paid class');return sendEmail_(d,confirmedEmail_(d,m[1],m[2]||'¥'+(bookingUnit_(m[1]).price*d.kidsCount).toLocaleString('en-US')));}}
+function statusEmail_(d,status,note){if(!d.email)return;if(status==='card saved')return sendEmail_(d,holdEmail_(d));if(status==='cancelled')return sendEmail_(d,cancelledEmail_(d));if(status==='paid'){var m=/paid (K?(?:W\d+|D\d{8})(?:AM|PM))(?: (¥[\d,]+))?/.exec(String(note||''));if(!m)throw new Error('Missing paid class');return sendEmail_(d,confirmedEmail_(d,m[1],m[2]||'¥'+(Number(d.amount)/bookingUnits_(d.codes).length).toLocaleString('en-US')));}}
 function dailyEmails(){
   var lock=LockService.getScriptLock();if(!lock.tryLock(20000))return;try{
   var classes=reconcileClasses_();
@@ -167,8 +176,8 @@ function bookingMondays_(){return Array.from({length:21},function(_,i){return Ut
 function bookingVenueName_(venue,zh){return venue==='kaminoge'?(zh?'上野毛':'Kaminoge'):(zh?'武藏小山':'Musashi-Koyama');}
 function bookingDirections_(d,zh){
   var venue=bookingUnits_(d.codes)[0].venue,k=venue==='kaminoge';
-  var address=k?'東京都世田谷区上野毛1-28-3':'東京都目黒区目黒本町5-10-19 Aliquot Turm 301';
-  var en=k?'1-28-3 Kaminoge, Setagaya, Tokyo':'Aliquot Turm 301, 5-10-19 Megurohoncho, Meguro, Tokyo';
+  var address=k?'東京都世田谷区上野毛1-28-3':'東京都目黒区目黒本町5-10-19 Aliquot Turm 501';
+  var en=k?'1-28-3 Kaminoge, Setagaya, Tokyo':'Aliquot Turm 501, 5-10-19 Megurohoncho, Meguro, Tokyo';
   var route=k?(zh?'東急大井町線上野毛站步行1分鐘。':'One minute on foot from Kaminoge Station on the Tokyu Oimachi Line.'):(zh?'東急目黑線武藏小山站步行7分鐘，或西小山站步行6分鐘。':'Seven minutes from Musashi-Koyama Station, or six minutes from Nishi-Koyama Station on the Tokyu Meguro Line.');
   return '<h3>'+(zh?'上課地點':'Your venue')+' · '+bookingVenueName_(venue,zh)+'</h3><p>'+(zh?address:en)+'</p><p>'+route+'</p><p><a href="https://www.google.com/maps/search/?api=1&amp;query='+encodeURIComponent(address)+'">'+(zh?'查看地圖':'View map')+'</a></p><p>'+(zh?'的士地址：':'Taxi address: ')+address+'</p>';
 }

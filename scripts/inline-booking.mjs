@@ -89,13 +89,15 @@ export const INLINE_BOOKING_METHODS = String.raw`
       }) };
     });
     const datesText = choices.map(d => this.dayLabel(d.date, lang) + ' · ' + (d.s === 'am' ? '09:00–12:00' : '14:00–17:00')).join(' / ');
-    const amount = (single ? choices.length * 14000 : Object.keys(this.state.sels || {}).length * 48000) * kids;
+    const discount = kids >= 3 ? 20 : kids === 2 ? 10 : 0;
+    const subtotal = (single ? choices.length * 14000 : Object.keys(this.state.sels || {}).length * 48000) * kids;
+    const amount = Math.round(subtotal * (100 - discount) / 100);
     const total = '¥' + amount.toLocaleString('en-US');
     const groups = {};
     choices.forEach(d => { const key = Math.floor((Date.parse(d.date) - Date.parse('2026-10-05')) / (7 * 86400000)) + d.s; groups[key] = (groups[key] || 0) + 1; });
     Object.assign(v, {
       venue: this.state.venue || 'musashi-koyama',
-      venueAddress: this.state.venue === 'kaminoge' ? text('1-28-3 Kaminoge, Setagaya, Tokyo · 1 minute from Kaminoge Station', '東京都世田谷區上野毛1-28-3 · 上野毛站步行1分鐘') : text('Aliquot Turm 301, 5-10-19 Megurohoncho, Tokyo · 7 minutes from Musashi-Koyama', '東京都目黑區目黑本町5-10-19 Aliquot Turm 301 · 武藏小山站步行7分鐘'),
+      venueAddress: this.state.venue === 'kaminoge' ? text('1-28-3 Kaminoge, Setagaya, Tokyo · 1 minute from Kaminoge Station', '東京都世田谷區上野毛1-28-3 · 上野毛站步行1分鐘') : text('Aliquot Turm 501, 5-10-19 Megurohoncho, Tokyo · 7 minutes from Musashi-Koyama', '東京都目黑區目黑本町5-10-19 Aliquot Turm 501 · 武藏小山站步行7分鐘'),
       changeVenue: e => this.setState({venue:e.target.value, sels:{}, daySels:{}, booking:null, sent:false, noWeeks:false, holdError:''}),
       isSingleDay: single, isWeekly: !single,
       formDisplay: this.state.sent ? 'none' : 'block',
@@ -108,6 +110,7 @@ export const INLINE_BOOKING_METHODS = String.raw`
       chosenDays: choices.map(d => ({ label: this.dayLabel(d.date, lang) + ' · ' + (d.s === 'am' ? '09:00–12:00' : '14:00–17:00'), remove: () => this.setState(st => { const next = { ...st.daySels }; delete next[d.date]; return { daySels: next }; }) })),
       availabilityMessage: this.state.availabilityError ? text('Availability could not be loaded. Refresh this page or contact us.', '暫時未能載入名額，請重新整理網頁或聯絡我們。') : !this.state.counts ? text('Loading availability…', '正在載入名額…') : '',
       formTotal: total,
+      familyOffer: text('2 children: 10% off · 3 or more: 20% off the full booking total', '2 位小朋友減 10% · 3 位或以上減 20%，適用於預約總額'),
       formBreakdown: single ? text(choices.length + ' day(s) × ' + kids + ' child(ren) × ¥14,000', choices.length + ' 日 × ' + kids + ' 位 × ¥14,000') : text(Object.keys(this.state.sels || {}).length + ' week(s) × ' + kids + ' child(ren) × ¥48,000', Object.keys(this.state.sels || {}).length + ' 週 × ' + kids + ' 位 × ¥48,000'),
       weekSaving: single && Object.values(groups).some(n => n === 4),
       reviewPolicy: single ? text('Each selected session is charged only after confirmation with at least 3 children, at least 3 days ahead. Confirmed classes may be charged immediately. No charge for classes that do not run.', '所選每節須於上課前最少 3 日滿 3 人確認開班後才收費。已確認班可隨即扣款；未能開班不收費。') : text('A weekly booking is charged only after all four days are confirmed with at least 3 children, at least 3 days ahead. Confirmed classes may be charged immediately. No charge for classes that do not run.', '整週須四日均於上課前最少 3 日滿 3 人確認後才收費。已確認班可隨即扣款；未能開班不收費。')
@@ -130,6 +133,11 @@ export const INLINE_BOOKING_METHODS = String.raw`
       ];
       v.payLabel = this.state.holding ? text('Opening secure page…', '正在開啟安全頁面…') : text('Save my card · ' + total + ' after confirmation →', '儲存信用卡 · 確認後收取 ' + total + ' →');
     }
+    const discountLabel = text(discount + '% family discount', '家庭優惠減 ' + discount + '%');
+    if (discount) v.formBreakdown += ' · ' + discountLabel + text(' (save ¥', '（節省 ¥') + (subtotal - amount).toLocaleString('en-US') + text(')', '）');
+    // Use the same final price for daily and weekly review and payment buttons.
+    v.bkRows = v.bkRows.map(row => row.k === text('total', '費用') ? { ...row, v: total + (discount ? ' · ' + discountLabel : '') + text(' · charged after confirmation', ' · 確認開班後才收費') } : row);
+    v.payLabel = this.state.holding ? text('Opening secure page…', '正在開啟安全頁面…') : text('Save my card · ' + total + ' after confirmation →', '儲存信用卡 · 確認後收取 ' + total + ' →');
     v.bkRows.unshift({k:text('venue', '上課地點'),v:v.venueAddress});
     const pay = v.pay;
     v.pay = e => {

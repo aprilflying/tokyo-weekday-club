@@ -160,6 +160,7 @@ export async function verifyComponent(source, file) {
   const check = (actual, expected) => { assert.deepEqual(actual, expected); checks++; };
   for (const lang of ['en', 'zh']) {
     const h = harness(source, lang), c = new h.C();
+    c.renderVals().chooseWholeWeek();
     const labels = Array.from(c.renderVals().weeks, w => w.days);
     check(labels.length, 21);
     for (let i = 0; i < 23; i++) {
@@ -235,7 +236,7 @@ async function verifyInlineBooking(source, file) {
     const h = harness(source, lang), c = new h.C();
     h.clock(Date.parse('2026-11-08T12:00:00+09:00'));
     c.state.counts = { bookingVersion: 9, sessions: {}, classes: {} };
-    c.renderVals().chooseSingleDay();
+    assert.equal(c.renderVals().isSingleDay,true,'Single Day is the initial booking mode');
     let v = c.renderVals();
     assert.equal(v.dayWeek, '5', 'Start on the first week with bookable days under the 3-day policy');
     c.renderVals().changeDayWeek({ target: { value: '7' } });
@@ -249,7 +250,7 @@ async function verifyInlineBooking(source, file) {
     c.renderVals().changeDayWeek({ target: { value: '8' } });
     c.renderVals().dayRows[0].sessions[1].pick();
     c.state.kids = 2; c.state.termsOk = true;
-    assert.equal(c.renderVals().formTotal, '¥84,000', 'Three dates across two weeks for two children');
+    assert.equal(c.renderVals().formTotal, '¥75,600', 'Three dates across two weeks with 10% family discount');
     c.state.counts.sessions.D20261123PM = 5;
     assert.equal(c.renderVals().submitDisabled, true, 'Capacity uses number of children');
     c.state.counts.sessions.D20261123PM = 0;
@@ -274,7 +275,13 @@ async function verifyInlineBooking(source, file) {
     assert.equal(c.renderVals().isWeekly, true);
     assert.equal(c.dailyChoices().length, 0);
     c.state.sels = { 8: 'am' };
-    assert.equal(c.renderVals().formTotal, '¥96,000', 'Weekly price remains 48000 per child');
+    assert.equal(c.renderVals().formTotal, '¥86,400', 'Weekly family total includes 10% discount');
+    assert.match(c.renderVals().payLabel,/86,400/);
+    assert.match(c.renderVals().bkRows.find(r=>r.k===(c.renderVals().zh?'費用':'total')).v,/86,400/);
+    c.state.kids=3;
+    assert.equal(c.renderVals().formTotal,'¥115,200');
+    assert.match(c.renderVals().payLabel,/115,200/);
+    assert.match(c.renderVals().formBreakdown,/20%/);
   }
   console.log(`${file}: bilingual inline modes, cross-week days, totals, capacity, checkout payload and expiry passed`);
 }
