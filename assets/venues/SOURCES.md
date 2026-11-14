@@ -1,5 +1,13 @@
 # MAKKAM venue photographs
 
+## Simpler Kaminoge planting — 14 November 2026
+
+`kaminoge-exterior-simple.jpg` is the current gallery image. At the user's request, removed the tall side tree/shrub and reduced dense foreground planting, keeping the entrance and warm classroom as the focus. Edited using the built-in image generation tool and saved as an optimized JPEG; previous versions are retained.
+
+Final edit prompt:
+
+> Use case: precise-object-edit. Edit target: this exact existing Kaminoge exterior website image. Simplify the busy planting at the sides: remove the tall foreground tree and branches intruding along the far left edge, remove the tall dense shrub in the dark rectangular planter at the far right edge, and thin the dense lower-left and lower-right flower beds to modest low greenery. Keep the two small white planters, a small amount of low flowering greenery, and the warm welcoming feeling. Restore the naturally visible brick, glass and decking behind removed plants seamlessly. Keep the exact 4:3 framing, building architecture, wooden railing and steps, glass doorway, all classroom furniture, interior plants, warm lighting, wall lettering 'Makkam Language & Cafe', paw symbol, and blank chalkboard with small smiley unchanged. Do not reintroduce 'Let’s Learn English'. Do not change the perspective or crop further. No people, extra decorations or text. The only edits are fewer plants at the outer sides and a calmer foreground.
+
 Provided reference: https://www.makkaminternational.jp/renewal/ (retrieved 14 November 2026).
 
 - `makkam-classroom.jpg`: the page's “classroom” gallery image, https://image.jimcdn.com/app/cms/image/transf/none/path/s3e82a381d94fbc73/image/i075ab1c434b6ca38/version/1792294151/image.jpg
