@@ -32,7 +32,7 @@ export const INLINE_BOOKING_METHODS = String.raw`
   }
   daySession(date, session) {
     const counts = this.state.counts;
-    const code = 'D' + date.replace(/-/g, '') + session.toUpperCase();
+    const code = (this.state.venue === 'kaminoge' ? 'K' : '') + 'D' + date.replace(/-/g, '') + session.toUpperCase();
     const ready = counts && counts.bookingVersion === 9 && counts.sessions;
     const confirmed = counts?.classes?.[code] === 'confirmed';
     const deadline = Date.parse(date + 'T00:00:00+09:00') - 3 * 86400000;
@@ -55,7 +55,7 @@ export const INLINE_BOOKING_METHODS = String.raw`
     const first = form.getAll('kidfirst'), last = form.getAll('kidlast'), ages = form.getAll('kidage');
     const names = first.map((f, i) => (lang === 'zh' ? (last[i] || '') + f : f + ' ' + (last[i] || '')).trim());
     const booking = {
-      bookingType: 'day', daysSel: choices, weeksSel: [],
+      bookingType: 'day', venue: this.state.venue || 'musashi-koyama', daysSel: choices, weeksSel: [],
       ref: 'TWC-' + (window.crypto?.randomUUID?.() || Date.now().toString(36) + '-' + Math.random().toString(36).slice(2)),
       name: (lang === 'zh' ? String(form.get('lastname') || '') + String(form.get('firstname') || '') : String(form.get('firstname') || '') + ' ' + String(form.get('lastname') || '')).trim(),
       email: form.get('email') || '',
@@ -72,7 +72,7 @@ export const INLINE_BOOKING_METHODS = String.raw`
     const text = (en, zh) => v.zh ? zh : en;
     const kids = this.state.kids ?? 1;
     const choices = this.dailyChoices();
-    const options = Array.from({ length: 12 }, (_, i) => ({ value: String(i), label: this.dayLabel(this.dayDate(i), lang) + ' – ' + this.dayLabel(this.dayDate(i, 3), lang) }))
+    const options = Array.from({ length: 21 }, (_, i) => ({ value: String(i), label: this.dayLabel(this.dayDate(i), lang) + ' – ' + this.dayLabel(this.dayDate(i, 3), lang) }))
       .filter(w => Date.now() < Date.parse(this.dayDate(Number(w.value), 3) + 'T00:00:00+09:00'));
     const firstAvailable = options.find(w => [0, 1, 2, 3].some(d => ['am', 'pm'].some(s => this.daySession(this.dayDate(Number(w.value), d), s).available)));
     const week = options.some(w => w.value === this.state.dayWeek) ? this.state.dayWeek : (firstAvailable || options[0])?.value;
@@ -94,6 +94,9 @@ export const INLINE_BOOKING_METHODS = String.raw`
     const groups = {};
     choices.forEach(d => { const key = Math.floor((Date.parse(d.date) - Date.parse('2026-10-05')) / (7 * 86400000)) + d.s; groups[key] = (groups[key] || 0) + 1; });
     Object.assign(v, {
+      venue: this.state.venue || 'musashi-koyama',
+      venueAddress: this.state.venue === 'kaminoge' ? text('1-28-3 Kaminoge, Setagaya, Tokyo · 1 minute from Kaminoge Station', '東京都世田谷區上野毛1-28-3 · 上野毛站步行1分鐘') : text('Aliquot Turm 301, 5-10-19 Megurohoncho, Tokyo · 7 minutes from Musashi-Koyama', '東京都目黑區目黑本町5-10-19 Aliquot Turm 301 · 武藏小山站步行7分鐘'),
+      changeVenue: e => this.setState({venue:e.target.value, sels:{}, daySels:{}, booking:null, sent:false, noWeeks:false, holdError:''}),
       isSingleDay: single, isWeekly: !single,
       formDisplay: this.state.sent ? 'none' : 'block',
       dayModeBg: single ? '#FAF7F2' : 'transparent', dayModeFg: single ? '#C0392B' : '#FAF7F2',
@@ -127,6 +130,7 @@ export const INLINE_BOOKING_METHODS = String.raw`
       ];
       v.payLabel = this.state.holding ? text('Opening secure page…', '正在開啟安全頁面…') : text('Save my card · ' + total + ' after confirmation →', '儲存信用卡 · 確認後收取 ' + total + ' →');
     }
+    v.bkRows.unshift({k:text('venue', '上課地點'),v:v.venueAddress});
     const pay = v.pay;
     v.pay = e => {
       const b = this.state.booking;

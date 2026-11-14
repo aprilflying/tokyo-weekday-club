@@ -22,7 +22,7 @@ async function waitForProduction() {
     try {
       const r = await fetch('https://www.tokyoweekdayclub.com/?booking-release=' + Date.now(), { signal: AbortSignal.timeout(15000) });
       const html = await r.text();
-      if (r.ok && html.includes(MARKER) && html.includes('/assets/landing.js') && html.includes('3 days ahead')) return;
+      if (r.ok && html.includes(MARKER) && html.includes('/assets/landing.js') && html.includes('Bookings open through February 2027') && html.includes('booking-venue')) return;
     } catch {}
     await new Promise(r => setTimeout(r, 10000));
   }
@@ -96,6 +96,12 @@ async function isolateNetwork(page, origins, holdRequests) {
           await page.locator('#daily-week').selectOption('7');
           await page.locator('#book button[aria-label]').filter({ hasText: '09:00–12:00' }).nth(0).click();
           await page.locator('#book button[aria-label]').filter({ hasText: '14:00–17:00' }).nth(1).click();
+          await page.locator('#booking-venue').selectOption('kaminoge');
+          assert.equal(await page.locator('#book').getByText('¥0', {exact:true}).count(),1,'Changing venue clears date selections');
+          await page.locator('#daily-week').selectOption('20');
+          assert.equal(await page.locator('#daily-week option').last().textContent().then(t=>t.includes(zh?'2月':'Feb')),true);
+          await page.locator('#book button[aria-label]').filter({hasText:'09:00–12:00'}).nth(0).click();
+          await page.locator('#book button[aria-label]').filter({hasText:'14:00–17:00'}).nth(1).click();
           await page.locator('select[name="kids"]').selectOption('2');
           assert.equal(await page.locator('#book').getByText('¥56,000', { exact: true }).count(), 1);
           const fields = { firstname: 'Test', lastname: 'Parent', email: 'parent@example.invalid', whatsapp: '00000000' };
@@ -117,6 +123,7 @@ async function isolateNetwork(page, origins, holdRequests) {
           await page.locator('#book button').filter({ hasText: zh ? '4 日整週' : '4-day week' }).click();
           assert.equal(await page.locator('#daily-week').isVisible(), false);
           assert.equal(await page.locator('input[name="firstname"]').inputValue(), 'Test', 'Keep details when changing booking type');
+          await page.locator('#booking-venue').selectOption('musashi-koyama');
           await page.clock.pauseAt(START);
           await tile(0).click();
           assert.equal(await page.locator('#book').getByText('fully booked · 已滿', { exact: true }).count(), 1);
@@ -133,7 +140,7 @@ async function isolateNetwork(page, origins, holdRequests) {
           await page.clock.runFor(50);
           await tile(0).waitFor({ state: 'detached' });
           await tile(1).waitFor({ state: 'visible' }); await tile(2).waitFor({ state: 'visible' });
-          await page.clock.setSystemTime(new Date('2027-01-05T00:00:00+09:00'));
+          await page.clock.setSystemTime(new Date('2027-03-09T00:00:00+09:00'));
           await page.evaluate(() => window.dispatchEvent(new Event('pageshow')));
           await page.clock.runFor(50);
           const emptyEn = 'New dates will be announced soon. Please contact us about future weeks.';

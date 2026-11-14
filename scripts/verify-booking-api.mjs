@@ -55,3 +55,16 @@ await billing.cardSaved(session);await billing.cardSaved(session);assert.equal(i
 await billing.invoicePaid({metadata:{ref:'TESTREF12345',week:'D20261123AM'},amount_paid:28000});assert.match(sheetCalls.at(-1).note,/paid D20261123AM ¥28,000/);
 const rejected=createBilling({stripe:{},sheet:async()=>({activated:false}),counts:async()=>{throw Error('must not run');}});await rejected.cardSaved(session);
 console.log('Booking validation, JPY pricing, 3-day deadline, next-week bookings, late top-ups, fail-closed reservations and invoice replay tests passed. No live Stripe calls.');
+// Calendar rollover and independent venues, retaining all historical codes.
+assert.equal(parseCode('W12AM').date,'2026-12-21');
+assert.equal(parseCode('W13AM').date,'2026-12-28');
+assert.equal(parseCode('W21AM').dates[3],'2027-02-25');
+assert.equal(parseCode('KW21AM').venue,'kaminoge');
+assert.equal(parseCode('D20270225PM').venue,'musashi-koyama');
+for(const code of ['W22AM','KW22AM','D20270301AM','KD20270301AM','D20270226AM','KD20270229AM','XD20270222AM']) assert.throws(()=>parseCode(code));
+const kFeb=normaliseBooking({...day,venue:'kaminoge',days:[{date:'2027-02-25',s:'pm'}]},now);
+assert.equal(kFeb.codes[0],'KD20270225PM'); assert.equal(kFeb.total,28000);
+assert.equal(normaliseBooking({venue:'kaminoge',weeks:[{i:20,s:'am'}],kidsCount:1},now).codes[0],'KW21AM');
+assert.throws(()=>normaliseBooking({...day,venue:'unknown'},now));
+assert.equal(readyToCharge(parseCode('KD20261123AM'),confirmed,now),false,'Musashi-Koyama confirmation cannot charge Kaminoge');
+console.log('Calendar through 25 February 2027 and venue isolation validated.');

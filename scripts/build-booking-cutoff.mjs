@@ -20,10 +20,10 @@ const METHODS = `
     return Date.parse('2026-10-06T00:00:00+09:00') + i * 7 * 86400000;
   }
   static bookingWeekOpen(i, now = Date.now()) {
-    return Number.isInteger(i) && i >= 0 && i < 12 && now < Component.bookingCutoff(i);
+    return Number.isInteger(i) && i >= 0 && i < 21 && now < Component.bookingCutoff(i);
   }
   static bookingWeekVisible(i, now = Date.now()) {
-    return Number.isInteger(i) && i >= 0 && i < 12 && now < Component.bookingCutoff(i) + 14 * 86400000;
+    return Number.isInteger(i) && i >= 0 && i < 21 && now < Component.bookingCutoff(i) + 14 * 86400000;
   }
   openBookingSelections() {
     return Object.fromEntries(Object.entries(this.state.sels || {}).filter(([i]) => Component.bookingWeekOpen(Number(i))));
@@ -46,7 +46,7 @@ const METHODS = `
       if (!q.has('held') && !q.has('cancel') && !this.state.cancelRef && (expiredSelection || expiredPending)) this.rejectClosedBooking();
       this.setState({ _bookingClockTime: now });
       clearTimeout(this._bookingClockTimer);
-      const events = Array.from({ length: 12 }, (_, i) => Component.bookingCutoff(i)).flatMap(t => [t, t + 14 * 86400000]);
+      const events = Array.from({ length: 21 }, (_, i) => Component.bookingCutoff(i)).flatMap(t => [t, t + 14 * 86400000]);
       const next = events.filter(t => t > now).sort((a, b) => a - b)[0];
       this._bookingClockTimer = next === undefined ? null : setTimeout(this._bookingClockRefresh, Math.min(next - now + 1, 86400000));
     };
@@ -132,7 +132,7 @@ function harness(source, language) {
     static now() { return now; }
   }
   class Logic {
-    constructor() { this.props = { lang: language }; this.state = {}; }
+    constructor() { this.props = { lang: language }; this.state = {counts:{bookingVersion:9,sessions:{},classes:{}}}; }
     setState(change) { this.state = { ...this.state, ...(typeof change === 'function' ? change(this.state) : change) }; }
   }
   const events = prefix => ({
@@ -161,8 +161,8 @@ export async function verifyComponent(source, file) {
   for (const lang of ['en', 'zh']) {
     const h = harness(source, lang), c = new h.C();
     const labels = Array.from(c.renderVals().weeks, w => w.days);
-    check(labels.length, 12);
-    for (let i = 0; i < 14; i++) {
+    check(labels.length, 21);
+    for (let i = 0; i < 23; i++) {
       for (const delta of [-1, 0, 1]) {
         const now = FIRST_CUTOFF + i * WEEK + delta;
         h.clock(now);
@@ -170,7 +170,7 @@ export async function verifyComponent(source, file) {
         const v = c.renderVals();
         check(Array.from(v.weeks, w => w.days), expected);
         check(v.weeks.filter(w => w.closed).length <= 2, true);
-        check(v.noUpcomingWeeks, now >= FIRST_CUTOFF + 11 * WEEK);
+        check(v.noUpcomingWeeks, now >= FIRST_CUTOFF + 20 * WEEK);
       }
     }
     h.clock(FIRST_CUTOFF);
@@ -219,7 +219,7 @@ export async function verifyComponent(source, file) {
     check(c.renderVals().weeks[0].days, labels[1]);
     c.stopBookingClock(); check(h.listeners.size, 0); check(h.timers.size, 0);
     // Retained history must disappear even after the last scheduled class closes.
-    h.clock(FIRST_CUTOFF + 13 * WEEK); check(c.renderVals().weeks.length, 0);
+    h.clock(FIRST_CUTOFF + 22 * WEEK); check(c.renderVals().weeks.length, 0);
     c.state.sels = { 0: 'am' }; c.state.booking = { weeksSel: [{ i: 0, s: 'am' }] };
     h.ctx.location.search = '?held=1'; c.startBookingClock();
     check(Object.keys(c.state.sels), ['0']); c.stopBookingClock();
