@@ -160,6 +160,7 @@ export async function verifyComponent(source, file) {
   const check = (actual, expected) => { assert.deepEqual(actual, expected); checks++; };
   for (const lang of ['en', 'zh']) {
     const h = harness(source, lang), c = new h.C();
+    c.renderVals().chooseWholeWeek();
     const labels = Array.from(c.renderVals().weeks, w => w.days);
     check(labels.length, 21);
     for (let i = 0; i < 23; i++) {
@@ -235,7 +236,7 @@ async function verifyInlineBooking(source, file) {
     const h = harness(source, lang), c = new h.C();
     h.clock(Date.parse('2026-11-08T12:00:00+09:00'));
     c.state.counts = { bookingVersion: 9, sessions: {}, classes: {} };
-    c.renderVals().chooseSingleDay();
+    assert.equal(c.renderVals().isSingleDay,true,'Single Day is the initial booking mode');
     let v = c.renderVals();
     assert.equal(v.dayWeek, '5', 'Start on the first week with bookable days under the 3-day policy');
     c.renderVals().changeDayWeek({ target: { value: '7' } });

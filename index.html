@@ -190,18 +190,17 @@ summary::-webkit-details-marker{display:none}
 </section>
 
 <section style="max-width:1180px;margin:0 auto;padding:96px 5vw">
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:56px;align-items:center;">
-    <div style="position:relative;max-width:260px;justify-self:center;width:100%">
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:center;">
+    <div style="position:relative;max-width:180px;flex:0 0 180px;order:2;margin:0 auto;width:100%">
       <div style="border-radius:50%;overflow:hidden;border:1px solid #0F0F12;aspect-ratio:1/1;background:#F1EAE0">
         <img src="/assets/family/tokyo-rainy-day.jpg" alt="Two children sharing an umbrella on an everyday walk in Tokyo, with faces covered" loading="lazy" width="900" height="1200" style="width:100%;height:100%;object-fit:cover;object-position:40% 58%;display:block">
       </div>
-      <div style="position:absolute;bottom:-14px;left:-14px;width:64px;height:64px"></div>
-      <div style="font-family: 'JetBrains Mono',monospace; font-size: 11.5px; letter-spacing: 0.06em; color: #C0392B; margin-top: 18px; text-align: center"><div style="font-family: 'Fraunces','Huninn','Zen Maru Gothic',serif; font-weight: 700; font-size: 19px; color: #0F0F12; margin-bottom: 4px">April Wong</div><div>founder of tokyo weekday club · Hong Konger · mom</div></div>
     </div>
-    <div>
+    <div style="flex:1 1 300px;order:1">
       <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.12em;color:#C0392B;margin-bottom:12px">founder story</div>
-      <sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><h2 style="font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-weight:900;font-size:clamp(30px,4vw,42px);letter-spacing:-0.01em;margin:0 0 26px">Why I built this</h2></sc-if>
-      <sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><h2 style="font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-weight:900;font-size:clamp(28px,3.6vw,38px);margin:0 0 26px">創辦人的話</h2></sc-if>
+      <sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><h2 style="font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-weight:900;font-size:clamp(30px,4vw,42px);letter-spacing:-0.01em;margin:0 0 12px">Why I built this</h2></sc-if>
+      <sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><h2 style="font-family:'Fraunces','Huninn','Zen Maru Gothic',serif;font-weight:900;font-size:clamp(28px,3.6vw,38px);margin:0 0 12px">創辦人的話</h2></sc-if>
+      <div style="font-family: 'JetBrains Mono',monospace; font-size: 11.5px; letter-spacing: 0.06em; color: #C0392B; margin: 0 0 24px; text-align: left"><div style="font-family: 'Fraunces','Huninn','Zen Maru Gothic',serif; font-weight: 700; font-size: 19px; color: #0F0F12; margin-bottom: 4px">April Wong</div><div>founder of tokyo weekday club · Hong Konger · mom</div></div>
       
       <p style="font-size:16.5px;line-height:1.75;color:rgba(15,15,18,.78);margin:0 0 18px;text-wrap:pretty"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>I needed some me-time to work, to think, to do things I like.</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>我需要一點屬於自己的時間，去工作、去思考、去做自己喜歡的事。</span></sc-if></p>
       <p style="font-size:16.5px;line-height:1.75;color:rgba(15,15,18,.78);margin:0 0 22px;text-wrap:pretty"><sc-if value="{{ en }}" hint-placeholder-val="{{ true }}"><span>I work from home and have spent three summers in Tokyo with my kids, trying private tutors, Japanese classes and painting classes to find what they really get into. This brings the best of it together for visiting families, starting with Japanese: small classes, a few hours a day, native teachers I trust with my own kids.</span></sc-if><sc-if value="{{ zh }}" hint-placeholder-val="{{ false }}"><span>我是在家工作的媽媽，連續三個暑假帶小朋友來東京，試過私人日語老師、日語班、繪畫班，找出真正讓他們投入的活動。現在我把最好的集合起來，專為來東京的家庭而設，先由日語開始：小班教學、每天幾小時、日籍老師，都是我放心交託自己小朋友的人。</span></sc-if></p>
@@ -428,8 +427,8 @@ summary::-webkit-details-marker{display:none}
       <select id="booking-venue" value="{{ venue }}" onChange="{{ changeVenue }}" style="width:100%;max-width:480px;padding:14px;border:1px solid #0F0F12;border-radius:16px;background:#FAF7F2;font:inherit;margin-bottom:8px"><option value="musashi-koyama">Musashi-Koyama · 武藏小山</option><option value="kaminoge">Kaminoge · 上野毛</option></select>
       <p style="color:#FAF7F2;font-size:14px;margin:0 0 24px">{{ venueAddress }}</p>
 <div role="group" aria-label="Booking type" style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
-  <button type="button" aria-pressed="{{ isWeekly }}" onClick="{{ chooseWholeWeek }}" style="padding:13px 22px;border:1px solid #FAF7F2;border-radius:999px;background:{{ weekModeBg }};color:{{ weekModeFg }};font:inherit;font-weight:600;cursor:pointer"><sc-if value="{{ en }}">4-day week · ¥48,000</sc-if><sc-if value="{{ zh }}">4 日整週 · ¥48,000</sc-if></button>
   <button type="button" aria-pressed="{{ isSingleDay }}" onClick="{{ chooseSingleDay }}" style="padding:13px 22px;border:1px solid #FAF7F2;border-radius:999px;background:{{ dayModeBg }};color:{{ dayModeFg }};font:inherit;font-weight:600;cursor:pointer"><sc-if value="{{ en }}">Single Day · ¥14,000</sc-if><sc-if value="{{ zh }}">單日 Single Day · ¥14,000</sc-if></button>
+  <button type="button" aria-pressed="{{ isWeekly }}" onClick="{{ chooseWholeWeek }}" style="padding:13px 22px;border:1px solid #FAF7F2;border-radius:999px;background:{{ weekModeBg }};color:{{ weekModeFg }};font:inherit;font-weight:600;cursor:pointer"><sc-if value="{{ en }}">4-day week · ¥48,000</sc-if><sc-if value="{{ zh }}">4 日整週 · ¥48,000</sc-if></button>
 </div>
       <div style="margin-top:28px;display:grid;gap:28px">
         <sc-if value="{{ isWeekly }}"><div>
@@ -462,10 +461,10 @@ summary::-webkit-details-marker{display:none}
         <sc-if value="{{ isSingleDay }}">
           <div style="display:grid;gap:16px">
             <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.1em;color:rgba(250,247,242,.85)"><sc-if value="{{ en }}">1 · Choose a week, then your days and times</sc-if><sc-if value="{{ zh }}">1 · 先揀星期，再揀日期同時段</sc-if></div>
-            <label for="daily-week" style="font-weight:600"><sc-if value="{{ en }}">Week</sc-if><sc-if value="{{ zh }}">選擇星期</sc-if></label>
-            <select id="daily-week" value="{{ dayWeek }}" onChange="{{ changeDayWeek }}" disabled="{{ noDayWeeks }}" style="width:100%;max-width:440px;background:#FAF7F2;border:1px solid #0F0F12;border-radius:16px;padding:14px 16px;font:inherit;color:#0F0F12;cursor:pointer">
+            <label for="daily-week" style="font-weight:600"><sc-if value="{{ en }}">Choose a week · tap to see all weeks</sc-if><sc-if value="{{ zh }}">選擇星期 · 按此查看所有星期</sc-if></label>
+            <div style="position:relative;width:100%;max-width:500px"><select id="daily-week" value="{{ dayWeek }}" onChange="{{ changeDayWeek }}" disabled="{{ noDayWeeks }}" style="width:100%;appearance:none;-webkit-appearance:none;background:#FAF7F2;border:1px solid #0F0F12;border-radius:16px;padding:16px 68px 16px 16px;font:inherit;color:#0F0F12;cursor:pointer">
               <sc-for list="{{ dayWeeks }}" as="week"><option value="{{ week.value }}">{{ week.label }}</option></sc-for>
-            </select>
+            </select><span aria-hidden="true" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:#C0392B;color:#FAF7F2;display:flex;align-items:center;justify-content:center;pointer-events:none"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="m5 8 7 7 7-7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></div>
             <sc-if value="{{ availabilityMessage }}"><p role="status" style="margin:0">{{ availabilityMessage }}</p></sc-if>
             <sc-if value="{{ noDayWeeks }}"><p style="margin:0"><sc-if value="{{ en }}">New dates will be announced soon. Please email us.</sc-if><sc-if value="{{ zh }}">新一期日期將會公布，歡迎電郵查詢。</sc-if></p></sc-if>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
@@ -652,7 +651,7 @@ class Component extends DCLogic {
     sheetEndpoint: 'https://script.google.com/macros/s/AKfycbwThrbKlH6gaWrqpzVSSM0D_5uKiAs8JA5Hr0TN-fWcErEbydmm3hkUsSpnLCnZBGMT/exec',
     sheetToken: 'CHANGE-ME-to-a-long-random-string'   // same string as the Apps Script and Vercel SITE_TOKEN
   };
-  state = { venue: new URLSearchParams(window.location.search).get('venue') === 'kaminoge' ? 'kaminoge' : 'musashi-koyama', lang: null, sent: false, sels: {}, daySels: {}, bookingType: new URLSearchParams(window.location.search).get('booking') === 'day' ? 'day' : 'week', pg: 0 };
+  state = { venue: new URLSearchParams(window.location.search).get('venue') === 'kaminoge' ? 'kaminoge' : 'musashi-koyama', lang: null, sent: false, sels: {}, daySels: {}, bookingType: new URLSearchParams(window.location.search).get('booking') === 'week' ? 'week' : 'day', pg: 0 };
   trackStart() { if (this._bkStarted) return; this._bkStarted = true; try { if (window.posthog && posthog.capture) posthog.capture('booking_started', { lang: this.state.lang ?? (document.documentElement.lang === 'zh-Hant' ? 'zh' : 'en') }); } catch (err) {} }
   renderVals() {
     const lang = this.state.lang ?? this.props.lang ?? 'en';

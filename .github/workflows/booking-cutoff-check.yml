@@ -1,7 +1,7 @@
 name: Booking cutoff regression checks
 on:
   push:
-    branches: [update/february-venue, main]
+    branches: [update/february-venue, update/family-photo-discounts, main]
     paths: ['lib/**', 'assets/**', 'operations/**', 'api/**', 'daily.html', 'scripts/**', 'index.html', 'hk.html', 'support.js', 'vercel.json', '.github/workflows/booking-cutoff-check.yml']
 permissions:
   contents: read

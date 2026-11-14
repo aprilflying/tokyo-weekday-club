@@ -81,13 +81,16 @@ async function isolateNetwork(page, origins, holdRequests) {
           const zh = pagePath === '/hk';
           const label = i => zh ? ['10月5–8日', '10月12–15日', '10月19–22日'][i] : ['Oct 5–8', 'Oct 12–15', 'Oct 19–22'][i];
           const tile = i => page.locator('#book').getByText(label(i), { exact: true });
+          await page.clock.runFor(700);
+          assert.equal(await page.evaluate(() => window.scrollY),0,'Fresh visit lands at the top');
+          assert.equal(await page.locator('#book button').filter({hasText:'Single Day'}).getAttribute('aria-pressed'),'true');
+          await page.locator('#book button').filter({hasText:zh?'4 日整週':'4-day week'}).click();
           await tile(0).waitFor({ state: 'visible' });
           await tile(1).waitFor({ state: 'visible' });
           await page.getByText('¥48,000', { exact: true }).first().waitFor({ state: 'visible' });
           await page.waitForFunction(() => document.querySelector('#book').textContent.includes('fully booked'));
           await page.clock.runFor(700);
           assert.equal(new URL(page.url()).hash, '', 'Previously shared booking anchors are removed on entry');
-          assert.equal(await page.evaluate(() => window.scrollY), 0, 'Opening the site lands at the top');
           await page.locator('#top a[href="#book"]').click();
           await page.waitForFunction(() => window.scrollY > 1000);
           // Daily and weekly modes use one form without navigating away.
@@ -151,6 +154,7 @@ async function isolateNetwork(page, origins, holdRequests) {
           await page.clock.resume();
           await page.getByRole('button', { name: zh ? 'EN' : '繁體中文', exact: true }).click();
           await page.getByText('¥48,000', { exact: true }).first().waitFor({ state: 'visible' });
+          await page.locator('#book button').filter({hasText:zh?'4-day week':'4 日整週'}).click();
           await page.locator('#book').getByText(zh ? emptyEn : emptyZh, { exact: true }).waitFor({ state: 'visible' });
           assert.equal(await page.locator('.sc-logic-error').count(), 0);
           assert.equal(await page.locator('body').innerText().then(t => t.includes('48,000')), true);
