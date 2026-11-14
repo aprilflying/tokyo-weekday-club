@@ -11,3 +11,5 @@
 .note-origami{right:15%;bottom:0;transform:rotate(4deg)}
 .collage-footnote{text-align:center;margin:18px 0 0;font-size:13px;color:rgba(15,15,18,.5)}
 @media(max-width:540px){.program-scrapbook{margin-top:22px}.scrap-note{gap:1px}.note-colours{left:-3%;width:24%}.note-shopping{right:-3%;width:25%}.scrap-hand{font-size:clamp(16px,4.3cqw,23px)}.scrap-japanese{font-size:clamp(11px,3.1cqw,16px)}.collage-footnote{margin-top:20px}}
+/* Keep the same logo, language switch and booking button visible on phones. */
+@media(max-width:540px){nav{gap:6px!important;padding:12px 4vw!important}nav>a[href="#top"]{font-size:clamp(16px,4.6vw,18px)!important}nav>a[href="#top"] svg{width:7px!important;height:7px!important;margin-left:3px!important;top:-7px!important}nav>div:last-child{gap:5px!important}nav button{padding:7px 5px!important;font-size:10px!important}nav a[href="#book"]{font-size:11px!important;padding:8px 9px!important}}
