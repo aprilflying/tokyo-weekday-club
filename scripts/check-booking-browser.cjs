@@ -77,6 +77,7 @@ async function isolateNetwork(page, origins, holdRequests) {
           assert.equal(response.status(), 200);
           await page.waitForFunction(() => window.__dcRegistry && Object.values(window.__dcRegistry).some(r => r.Logic));
           assert.equal(await page.locator('.sc-logic-error').count(), 0, 'No template runtime error');
+          assert.equal(await page.locator('#top .twc-sunbox').count(), 1, 'The circles remain inside the hero alongside the headline and buttons');
           assert.equal(await page.evaluate(marker => document.querySelector('script[data-dc-script]').textContent.includes(marker), MARKER), true);
           const zh = pagePath === '/hk';
           const label = i => zh ? ['10月5–8日', '10月12–15日', '10月19–22日'][i] : ['Oct 5–8', 'Oct 12–15', 'Oct 19–22'][i];
