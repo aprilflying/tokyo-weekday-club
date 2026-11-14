@@ -6,3 +6,12 @@ Provided reference: https://www.makkaminternational.jp/renewal/ (retrieved 14 No
 - `makkam-lesson.jpg`: the page's “one-to-one” gallery image, https://image.jimcdn.com/app/cms/image/transf/none/path/s3e82a381d94fbc73/image/i414d3ec38860933a/version/1793757706/image.jpg
 
 Original photos copied without modification for the user's requested site update. Captions identify MAKKAM's classroom/lesson photographs without attributing them to a particular branch or claiming they depict Tokyo Weekday Club children. The illustrated exterior image was not used as a site photograph.
+
+## Venue image selection — 14 November 2026
+
+The user supplied both replacement images directly and specified their venue mapping. Files are copied byte-for-byte from the attachments:
+
+- `kaminoge-exterior.png`: supplied exterior image for Kaminoge.
+- `musashi-koyama-classroom.png`: supplied original classroom image for Musashi-Koyama.
+
+These replace the previous gallery images on both language versions. Captions identify each venue; the section does not describe the supplied images as documentary photographs.
