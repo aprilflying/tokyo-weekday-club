@@ -282,6 +282,25 @@ async function verifyInlineBooking(source, file) {
     assert.equal(c.renderVals().formTotal,'¥115,200');
     assert.match(c.renderVals().payLabel,/115,200/);
     assert.match(c.renderVals().formBreakdown,/20%/);
+    c.renderVals().chooseSingleDay();
+    h.clock(Date.parse('2027-02-01T12:00:00+09:00'));
+    c.renderVals().changeDayWeek({target:{value:'20'}});
+    assert.equal(c.renderVals().dayRows.length,7);
+    assert.match(c.renderVals().dayWeeks.at(-1).label,/28/);
+    for(const d of [3,4,5,6])c.renderVals().dayRows[d].sessions[0].pick();
+    assert.equal(c.renderVals().weekSaving,false,'Thu–Sun is not the weekly package');
+    c.state.daySels={};
+    for(const d of [0,1,2,3,4])c.renderVals().dayRows[d].sessions[0].pick();
+    assert.equal(c.renderVals().weekSaving,true,'Mon–Thu can use the weekly package, with Friday booked separately');
+    c.state.daySels={'2027-02-28':'pm'};
+    c.state.counts.classes.D20270228PM='confirmed';
+    h.clock(Date.parse('2027-02-27T23:59:59+09:00'));
+    assert.equal(c.renderVals().dayWeek,'20','Keep this week visible through Saturday for Sunday bookings');
+    assert.equal(c.renderVals().dayRows[6].sessions[1].disabled,false);
+    h.clock(Date.parse('2027-02-28T00:00:00+09:00'));
+    assert.equal(c.renderVals().noDayWeeks,true);
+    assert.equal(c.renderVals().submitDisabled,true);
+
   }
   console.log(`${file}: bilingual inline modes, cross-week days, totals, capacity, checkout payload and expiry passed`);
 }

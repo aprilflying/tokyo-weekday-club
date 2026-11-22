@@ -9,7 +9,7 @@ function bookingUnit_(code) {
     m=/^D(2026|2027)(\d{2})(\d{2})(AM|PM)$/.exec(raw);
     if(!m)throw new Error('Invalid class code');
     var date=m[1]+'-'+m[2]+'-'+m[3], offset=(ymdMs_(date)-ymdMs_(bookingMondays_()[0]))/86400000;
-    if(!Number.isInteger(offset)||offset<0||offset>=147||offset%7>3||Utilities.formatDate(new Date(ymdMs_(date)),'UTC','yyyy-MM-dd')!==date)throw new Error('Invalid date');
+    if(!Number.isInteger(offset)||offset<0||offset>=147||Utilities.formatDate(new Date(ymdMs_(date)),'UTC','yyyy-MM-dd')!==date)throw new Error('Invalid date');
     dates=[date];type='day';session=m[4];
   }
   return {code:code,venue:prefix?'kaminoge':'musashi-koyama',type:type,dates:dates,date:dates[0],session:session,price:type==='day'?14000:48000,
@@ -23,8 +23,9 @@ function bookingRow_(ref){var sh=sheet_();if(sh.getLastRow()<2)return 0;var refs
 function clearHold_(ref){var sh=bookingHolds_();if(sh.getLastRow()<2)return;var rows=sh.getRange(2,1,sh.getLastRow()-1,4).getValues();rows.forEach(function(v,i){if(String(v[0])===String(ref))sh.getRange(i+2,2).setValue(0);});}
 function putHold_(ref,codes,kids){var sh=bookingHolds_(),row=0;var rows=sh.getLastRow()>1?sh.getRange(2,1,sh.getLastRow()-1,4).getValues():[];rows.forEach(function(v,i){if(String(v[0])===String(ref))row=i+2;});var value=[ref,Date.now()+35*60000,codes,kids];if(row)sh.getRange(row,1,1,4).setValues([value]);else sh.appendRow(value);}
 function counts_(fresh,excludeRef){
-  var savedClasses=confirmedClasses_();var out={bookingVersion:9,confirmationDays:3,calendarEnd:'2027-02-25',venues:['musashi-koyama','kaminoge'],max:6,min:3,sessions:{},confirmed:{},classes:{},closedWeeks:{}};Object.keys(savedClasses).forEach(function(c){out.classes[c]='confirmed';});
-  for(var w=1;w<=21;w++)['AM','PM','KAM','KPM'].forEach(function(s){bookingUnit_((s.charAt(0)==='K'?'K':'')+'W'+w+s.slice(-2)).sessions.forEach(function(c){out.sessions[c]=0;out.confirmed[c]=0;});});
+  var savedClasses=confirmedClasses_();var out={bookingVersion:9,confirmationDays:3,calendarEnd:'2027-02-28',venues:['musashi-koyama','kaminoge'],max:6,min:3,sessions:{},confirmed:{},classes:{},closedWeeks:{}};Object.keys(savedClasses).forEach(function(c){out.classes[c]='confirmed';});
+  var firstDay=ymdMs_(bookingMondays_()[0]);
+  for(var d=0;d<147;d++){var date=Utilities.formatDate(new Date(firstDay+d*86400000),'UTC','yyyy-MM-dd');['AM','PM','KAM','KPM'].forEach(function(s){var c=(s.charAt(0)==='K'?'K':'')+'D'+date.replace(/-/g,'')+s.slice(-2);out.sessions[c]=0;out.confirmed[c]=0;});}
   var sh=sheet_(),active={};
   var rows=sh.getLastRow()>1?sh.getRange(2,1,sh.getLastRow()-1,HEADERS.length).getValues():[];
   rows.forEach(function(v){
