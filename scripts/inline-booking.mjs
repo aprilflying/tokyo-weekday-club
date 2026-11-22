@@ -72,11 +72,11 @@ export const INLINE_BOOKING_METHODS = String.raw`
     const text = (en, zh) => v.zh ? zh : en;
     const kids = this.state.kids ?? 1;
     const choices = this.dailyChoices();
-    const options = Array.from({ length: 21 }, (_, i) => ({ value: String(i), label: this.dayLabel(this.dayDate(i), lang) + ' – ' + this.dayLabel(this.dayDate(i, 3), lang) }))
-      .filter(w => Date.now() < Date.parse(this.dayDate(Number(w.value), 3) + 'T00:00:00+09:00'));
-    const firstAvailable = options.find(w => [0, 1, 2, 3].some(d => ['am', 'pm'].some(s => this.daySession(this.dayDate(Number(w.value), d), s).available)));
+    const options = Array.from({ length: 21 }, (_, i) => ({ value: String(i), label: this.dayLabel(this.dayDate(i), lang) + ' – ' + this.dayLabel(this.dayDate(i, 6), lang) }))
+      .filter(w => Date.now() < Date.parse(this.dayDate(Number(w.value), 6) + 'T00:00:00+09:00'));
+    const firstAvailable = options.find(w => [0, 1, 2, 3, 4, 5, 6].some(d => ['am', 'pm'].some(s => this.daySession(this.dayDate(Number(w.value), d), s).available)));
     const week = options.some(w => w.value === this.state.dayWeek) ? this.state.dayWeek : (firstAvailable || options[0])?.value;
-    const dayRows = week === undefined ? [] : [0, 1, 2, 3].map(d => {
+    const dayRows = week === undefined ? [] : [0, 1, 2, 3, 4, 5, 6].map(d => {
       const date = this.dayDate(Number(week), d), title = this.dayLabel(date, lang);
       return { title, sessions: ['am', 'pm'].map(s => {
         const status = this.daySession(date, s), selected = this.state.daySels?.[date] === s;
@@ -94,7 +94,7 @@ export const INLINE_BOOKING_METHODS = String.raw`
     const amount = Math.round(subtotal * (100 - discount) / 100);
     const total = '¥' + amount.toLocaleString('en-US');
     const groups = {};
-    choices.forEach(d => { const key = Math.floor((Date.parse(d.date) - Date.parse('2026-10-05')) / (7 * 86400000)) + d.s; groups[key] = (groups[key] || 0) + 1; });
+    choices.forEach(d => { const offset = (Date.parse(d.date) - Date.parse('2026-10-05')) / 86400000; if (offset % 7 > 3) return; const key = Math.floor(offset / 7) + d.s; groups[key] = (groups[key] || 0) + 1; });
     Object.assign(v, {
       venue: this.state.venue || 'musashi-koyama',
       venueAddress: this.state.venue === 'kaminoge' ? text('1-28-3 Kaminoge, Setagaya, Tokyo · 1 minute from Kaminoge Station', '東京都世田谷區上野毛1-28-3 · 上野毛站步行1分鐘') : text('Aliquot Turm 501, 5-10-19 Megurohoncho, Tokyo · 7 minutes from Musashi-Koyama', '東京都目黑區目黑本町5-10-19 Aliquot Turm 501 · 武藏小山站步行7分鐘'),

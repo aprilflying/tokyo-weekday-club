@@ -9,7 +9,7 @@ assert.equal(normaliseBooking({...day,amountJpy:1,discountPercent:100,pricingVer
 assert.equal(normaliseBooking({weeks:[{i:7,s:'am'}],kidsCount:6},now).total,230400);
 for(const bad of [
  {...day,kidsCount:7},{...day,kidsCount:0},{...day,kidsCount:1.5},
- {...day,days:[{date:'2026-11-27',s:'am'}]}, {...day,days:[{date:'2026-11-31',s:'am'}]},
+ {...day,days:[{date:'2026-11-31',s:'am'}]},
  {...day,days:[{date:'2026-11-23',s:'bad'}]}, {...day,days:[...day.days,...day.days]},
  {...day,days:[{date:'2026-11-23',s:'am'},{date:'2026-11-23',s:'pm'}]},
 ])assert.throws(()=>normaliseBooking(bad,now));
@@ -61,13 +61,13 @@ assert.equal(parseCode('W13AM').date,'2026-12-28');
 assert.equal(parseCode('W21AM').dates[3],'2027-02-25');
 assert.equal(parseCode('KW21AM').venue,'kaminoge');
 assert.equal(parseCode('D20270225PM').venue,'musashi-koyama');
-for(const code of ['W22AM','KW22AM','D20270301AM','KD20270301AM','D20270226AM','KD20270229AM','XD20270222AM']) assert.throws(()=>parseCode(code));
+for(const code of ['W22AM','KW22AM','D20270301AM','KD20270301AM','KD20270229AM','XD20270222AM']) assert.throws(()=>parseCode(code));
 const kFeb=normaliseBooking({...day,venue:'kaminoge',days:[{date:'2027-02-25',s:'pm'}]},now);
 assert.equal(kFeb.codes[0],'KD20270225PM'); assert.equal(kFeb.total,25200);
 assert.equal(normaliseBooking({venue:'kaminoge',weeks:[{i:20,s:'am'}],kidsCount:1},now).codes[0],'KW21AM');
 assert.throws(()=>normaliseBooking({...day,venue:'unknown'},now));
 assert.equal(readyToCharge(parseCode('KD20261123AM'),confirmed,now),false,'Musashi-Koyama confirmation cannot charge Kaminoge');
-console.log('Calendar through 25 February 2027 and venue isolation validated.');
+console.log('Calendar through 28 February 2027 and venue isolation validated.');
 
 // Family prices apply to every child and every selected day/week, at both venues.
 for (const [kids,daily,weekly] of [[1,14000,48000],[2,25200,86400],[3,33600,115200],[4,44800,153600],[6,67200,230400]]) {
@@ -96,3 +96,23 @@ for (const [kids,code,expected] of [[2,'D20261123AM',25200],[3,'KW8PM',115200]])
 const badTotal=createHoldHandler({stripe,sheet:async()=>({amountJpy:28000}),token:'test',siteUrl:'https://example.invalid',now:()=>now});
 assert.equal((await badTotal({json:async()=>body})).status,503,'Do not open Checkout if the Sheet price disagrees');
 console.log('Family discounts, legacy prices and discounted invoice replay passed.');
+
+// Every day in the calendar is bookable; weekly products still cover Mon–Thu.
+for (const venue of ['musashi-koyama', 'kaminoge']) {
+ const prefix = venue === 'kaminoge' ? 'K' : '';
+ for (const date of ['2026-11-23','2026-11-24','2026-11-25','2026-11-26','2026-11-27','2026-11-28','2026-11-29','2027-02-28']) {
+  for (const s of ['am','pm']) {
+   const booking = normaliseBooking({...day,venue,days:[{date,s}]},now);
+   assert.equal(booking.total,25200);
+   assert.equal(booking.codes[0],prefix+'D'+date.replaceAll('-','')+s.toUpperCase());
+   assert.equal(booking.units[0].dates.length,1);
+   const deadline = confirmationDeadline(booking.units[0]);
+   assert.equal(canBook(booking.units[0],{},deadline-1),true);
+   assert.equal(canBook(booking.units[0],{},deadline),false);
+  }
+ }
+ const weekly=parseCode(prefix+'W8AM');
+ assert.deepEqual(weekly.dates,['2026-11-23','2026-11-24','2026-11-25','2026-11-26']);
+ assert.equal(sessionCodes(weekly).includes(prefix+'D20261127AM'),false);
+}
+console.log('Seven-day single bookings, weekend deadlines and unchanged four-day weekly packages passed.');

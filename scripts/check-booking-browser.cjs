@@ -22,7 +22,7 @@ async function waitForProduction() {
     try {
       const r = await fetch('https://www.tokyoweekdayclub.com/?booking-release=' + Date.now(), { signal: AbortSignal.timeout(15000) });
       const html = await r.text();
-      if (r.ok && html.includes(MARKER) && html.includes('/assets/landing.js') && html.includes('Bookings open through February 2027') && html.includes('booking-venue')) return;
+      if (r.ok && html.includes(MARKER) && html.includes('/assets/landing.js') && html.includes('Bookings open through February 2027') && html.includes('booking-venue') && html.includes('Single days: Monday–Sunday') && html.includes('this.dayDate(i, 6)')) return;
     } catch {}
     await new Promise(r => setTimeout(r, 10000));
   }
@@ -104,8 +104,9 @@ async function isolateNetwork(page, origins, holdRequests) {
           assert.equal(await page.locator('#book').getByText('¥0', {exact:true}).count(),1,'Changing venue clears date selections');
           await page.locator('#daily-week').selectOption('20');
           assert.equal(await page.locator('#daily-week option').last().textContent().then(t=>t.includes(zh?'2月':'Feb')),true);
-          await page.locator('#book button[aria-label]').filter({hasText:'09:00–12:00'}).nth(0).click();
-          await page.locator('#book button[aria-label]').filter({hasText:'14:00–17:00'}).nth(1).click();
+          assert.equal(await page.locator('#book button[aria-label]').filter({hasText:'09:00–12:00'}).count(),7);
+          await page.locator('#book button[aria-label]').filter({hasText:'09:00–12:00'}).nth(4).click();
+          await page.locator('#book button[aria-label]').filter({hasText:'14:00–17:00'}).nth(6).click();
           await page.locator('select[name="kids"]').selectOption('2');
           assert.equal(await page.locator('#book').getByText('¥50,400', { exact: true }).count(), 1);
           const fields = { firstname: 'Test', lastname: 'Parent', email: 'parent@example.invalid', whatsapp: '00000000' };

@@ -79,7 +79,7 @@ assert.equal(reserve('KAMFEB004','KD20270222AM',1).code,'full');
 assert.equal(reserve('MUSFEB002','D20270222AM',5).ok,true,'Other venue retains its own capacity');
 assert.equal(reserve('MIXVENUE1','KD20270223AM-D20270224AM').ok,false);
 assert.equal(reserve('KAMWEEK21','KW21PM',1).amountJpy,48000);
-for(const code of ['W22AM','KD20270301AM','KD20270226AM'])assert.throws(()=>ctx.bookingUnit_(code));
+for(const code of ['W22AM','KD20270301AM','KD20270229AM'])assert.throws(()=>ctx.bookingUnit_(code));
 assert.match(ctx.bookingDirections_({codes:'KD20270222AM'},false),/1-28-3 Kaminoge/);
 assert.match(ctx.bookingDirections_({codes:'D20270222AM'},true),/Aliquot Turm 501/);
 assert.match(ctx.weekLabel_('KW21AM',true),/上野毛.*2月22日.*2月25日/);
@@ -101,3 +101,36 @@ assert.match(ctx.holdEmail_(familyEmail).body,/10% family discount/);
 assert.match(ctx.holdEmail_({...familyEmail,lang:'zh'}).body,/減 10%/);
 assert.equal(ctx.holdEmail_({...familyEmail,amount:28000}).body.includes('family discount'),false);
 console.log('Sheet independently calculates family discounts and preserves existing reservation prices.');
+
+// Friday–Sunday have numeric seat counts, atomic capacity and independent confirmation.
+now=Date.parse('2027-02-01T00:00:00+09:00');
+assert.equal(ctx.counts_(true).calendarEnd,'2027-02-28');
+assert.equal(Object.keys(ctx.counts_(true).sessions).length,147*2*2);
+const beforeWeekend=ctx.counts_(true);
+for(const prefix of ['', 'K']) {
+ for(const date of ['20270226','20270227','20270228']) {
+  for(const session of ['AM','PM']) {
+   const code=prefix+'D'+date+session,ref='SEVENDAY'+code;
+   assert.equal(ctx.counts_(true).sessions[code],0);
+   assert.equal(reserve(ref,code,3).amountJpy,33600);
+   assert.equal(ctx.counts_(true).sessions[code],3,'Weekend holds count toward capacity');
+   assert.equal(reserve(ref+'FULL',code,4).code,'full');
+   assert.equal(activate(ref,code,3).activated,true);
+   assert.equal(ctx.counts_(true).confirmed[code],3);
+   assert.equal(ctx.counts_(true).classes[code],'confirmed');
+   assert.equal(read(ctx.chargeableBooking_({ref,code})).chargeable,true);
+   assert.equal(ctx.counts_(true)[prefix+'W21'+session],beforeWeekend[prefix+'W21'+session],'Weekend participants do not affect weekly counts');
+  }
+ }
+}
+// Three-day cutoff and underfilled cancellation work on a Saturday too.
+now=Date.parse('2027-02-16T12:00:00+09:00');
+assert.equal(reserve('WEEKENDPENDING','D20270220PM',1).ok,true);
+activate('WEEKENDPENDING','D20270220PM',1);
+sheet().getRange(ctx.bookingRow_('WEEKENDPENDING'),15).setValue('card saved');
+now=Date.parse('2027-02-17T00:00:00+09:00');
+assert.equal(reserve('WEEKENDLATE01','D20270220PM').code,'booking_closed');
+ctx.dailyEmails();ctx.dailyEmails();
+assert.equal(messages.filter(m=>m.ref==='WEEKENDPENDING').length,1);
+assert.equal(ctx.counts_(true).sessions.D20270220PM,0);
+console.log('Weekend holds, capacity, confirmation, billing eligibility and cancellation passed at both venues.');
